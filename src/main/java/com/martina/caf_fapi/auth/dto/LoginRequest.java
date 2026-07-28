@@ -1,4 +1,4 @@
-package com.martina.caf_fapi.utenti.dto;
+package com.martina.caf_fapi.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

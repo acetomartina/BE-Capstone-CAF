@@ -1,4 +1,4 @@
-package com.martina.caf_fapi.utenti;
+package com.martina.caf_fapi.utenti.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

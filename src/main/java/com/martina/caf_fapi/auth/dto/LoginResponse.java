@@ -1,6 +1,6 @@
-package com.martina.caf_fapi.utenti.dto;
+package com.martina.caf_fapi.auth.dto;
 
-import com.martina.caf_fapi.utenti.Ruolo;
+import com.martina.caf_fapi.utenti.entity.Ruolo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

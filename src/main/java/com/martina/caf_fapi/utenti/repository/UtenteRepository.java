@@ -1,5 +1,6 @@
-package com.martina.caf_fapi.utenti;
+package com.martina.caf_fapi.utenti.repository;
 
+import com.martina.caf_fapi.utenti.entity.Utente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

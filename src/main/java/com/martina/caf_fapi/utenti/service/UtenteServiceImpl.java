@@ -2,6 +2,7 @@ package com.martina.caf_fapi.utenti.service;
 
 import com.martina.caf_fapi.exception.InvalidDataException;
 import com.martina.caf_fapi.exception.ResourceAlreadyExistsException;
+import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.utenti.dto.UtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
@@ -60,21 +61,31 @@ public class UtenteServiceImpl implements UtenteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UtenteResponse trovaPerId(Long id) {
-        return null;
+
+        Utente utente = trovaEntitaPerId(id);
+
+        return utenteMapper.toResponse(utente);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UtenteResponse> trovaTutti(Pageable pageable) {
-        return null;
+
+        return utenteRepository.findAll(pageable)
+                .map(utenteMapper::toResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UtenteResponse> trovaPerRuolo(
             Ruolo ruolo,
             Pageable pageable
     ) {
-        return null;
+
+        return utenteRepository.findByRuolo(ruolo, pageable)
+                .map(utenteMapper::toResponse);
     }
 
     @Override
@@ -211,5 +222,13 @@ public class UtenteServiceImpl implements UtenteService {
                     "Esiste già un utente con questo numero di matricola"
             );
         }
+    }
+
+    private Utente trovaEntitaPerId(Long id) {
+
+        return utenteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente non trovato con id: " + id
+                ));
     }
 }

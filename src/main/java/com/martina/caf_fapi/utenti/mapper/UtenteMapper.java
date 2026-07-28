@@ -71,9 +71,10 @@ public class UtenteMapper
     }
 
     public void updateEntity(
-            Utente utente,
-            UtenteUpdateRequest request
-    ) {
+            UtenteUpdateRequest request,
+            Utente utente
+    )
+    {
         if (utente == null || request == null) {
             return;
         }

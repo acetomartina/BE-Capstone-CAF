@@ -89,29 +89,77 @@ public class UtenteServiceImpl implements UtenteService {
     }
 
     @Override
+    @Transactional
     public UtenteResponse aggiornaUtente(
             Long id,
             UtenteUpdateRequest request
     ) {
-        return null;
+
+        Utente utente = trovaEntitaPerId(id);
+
+        normalizzaUpdateRequest(request);
+
+        verificaEmailDuplicata(utente, request);
+
+        utenteMapper.updateEntity(request, utente);
+
+        Utente utenteAggiornato = utenteRepository.save(utente);
+
+        return utenteMapper.toResponse(utenteAggiornato);
     }
 
     @Override
+    @Transactional
     public UtenteResponse cambiaRuolo(
             Long id,
             Ruolo nuovoRuolo
     ) {
-        return null;
+
+        Utente utente = trovaEntitaPerId(id);
+
+        if (nuovoRuolo == null) {
+            throw new InvalidDataException(
+                    "Il nuovo ruolo è obbligatorio."
+            );
+        }
+
+        if (utente.getRuolo() == nuovoRuolo) {
+            throw new InvalidDataException(
+                    "L'utente possiede già questo ruolo."
+            );
+        }
+
+        utente.setRuolo(nuovoRuolo);
+
+        Utente utenteAggiornato = utenteRepository.save(utente);
+
+        return utenteMapper.toResponse(utenteAggiornato);
     }
 
     @Override
+    @Transactional
     public UtenteResponse attivaUtente(Long id) {
-        return null;
+
+        Utente utente = trovaEntitaPerId(id);
+
+        utente.setAttivo(true);
+
+        Utente utenteAggiornato = utenteRepository.save(utente);
+
+        return utenteMapper.toResponse(utenteAggiornato);
     }
 
     @Override
+    @Transactional
     public UtenteResponse disattivaUtente(Long id) {
-        return null;
+
+        Utente utente = trovaEntitaPerId(id);
+
+        utente.setAttivo(false);
+
+        Utente utenteAggiornato = utenteRepository.save(utente);
+
+        return utenteMapper.toResponse(utenteAggiornato);
     }
 
     private void normalizzaRequest(UtenteRequest request) {
@@ -195,6 +243,71 @@ public class UtenteServiceImpl implements UtenteService {
         );
     }
 
+    private void normalizzaUpdateRequest(
+            UtenteUpdateRequest request
+    ) {
+
+        request.setNome(
+                FormattazioneUtils.normalizzaTitleCase(
+                        request.getNome()
+                )
+        );
+
+        request.setCognome(
+                FormattazioneUtils.normalizzaTitleCase(
+                        request.getCognome()
+                )
+        );
+
+        request.setEmail(
+                FormattazioneUtils.normalizzaEmail(
+                        request.getEmail()
+                )
+        );
+
+        request.setTelefono(
+                FormattazioneUtils.normalizzaTelefono(
+                        request.getTelefono()
+                )
+        );
+
+        request.setIndirizzo(
+                FormattazioneUtils.normalizzaTesto(
+                        request.getIndirizzo()
+                )
+        );
+
+        request.setComune(
+                FormattazioneUtils.normalizzaTitleCase(
+                        request.getComune()
+                )
+        );
+
+        request.setProvincia(
+                FormattazioneUtils.normalizzaProvincia(
+                        request.getProvincia()
+                )
+        );
+
+        request.setCap(
+                FormattazioneUtils.normalizzaCap(
+                        request.getCap()
+                )
+        );
+
+        request.setMansione(
+                FormattazioneUtils.normalizzaTitleCase(
+                        request.getMansione()
+                )
+        );
+
+        request.setUrlImmagineProfilo(
+                FormattazioneUtils.normalizzaUrl(
+                        request.getUrlImmagineProfilo()
+                )
+        );
+    }
+
     private void verificaDuplicati(UtenteRequest request) {
 
         if (utenteRepository.existsByEmail(request.getEmail())) {
@@ -220,6 +333,26 @@ public class UtenteServiceImpl implements UtenteService {
         ) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questo numero di matricola"
+            );
+        }
+    }
+
+    private void verificaEmailDuplicata(
+            Utente utente,
+            UtenteUpdateRequest request
+    ) {
+
+        boolean emailModificata =
+                !utente.getEmail().equalsIgnoreCase(request.getEmail());
+
+        if (
+                emailModificata
+                        && utenteRepository.existsByEmail(
+                        request.getEmail()
+                )
+        ) {
+            throw new ResourceAlreadyExistsException(
+                    "Esiste già un utente con questa email"
             );
         }
     }

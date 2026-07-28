@@ -5,8 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="814d3656-f99c-4fcf-a3bb-4bf61c1bb101" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/UtenteRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/dto/LoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/dto/LoginResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/dto/UtenteRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/dto/UtenteResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/dto/UtenteUpdateRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/Utente.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/martina/caf_fapi/utenti/Utente.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

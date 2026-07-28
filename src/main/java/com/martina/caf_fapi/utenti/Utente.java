@@ -31,7 +31,11 @@ public class Utente {
     @Column(nullable = false, length = 80)
     private String cognome;
 
-    @Column(name = "codice_fiscale", unique = true, length = 16)
+    @Column(
+            name = "codice_fiscale",
+            nullable = false,
+            unique = true,
+            length = 16)
     private String codiceFiscale;
 
     @Column(name = "data_nascita")

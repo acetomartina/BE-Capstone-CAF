@@ -310,7 +310,7 @@ public class UtenteServiceImpl implements UtenteService {
 
     private void verificaDuplicati(UtenteRequest request) {
 
-        if (utenteRepository.existsByEmail(request.getEmail())) {
+        if (utenteRepository.existsByEmailIgnoreCase(request.getEmail())) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questa email"
             );
@@ -347,7 +347,7 @@ public class UtenteServiceImpl implements UtenteService {
 
         if (
                 emailModificata
-                        && utenteRepository.existsByEmail(
+                        && utenteRepository.existsByEmailIgnoreCase(
                         request.getEmail()
                 )
         ) {

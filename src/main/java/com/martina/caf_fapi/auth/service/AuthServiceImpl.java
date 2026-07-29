@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Locale;
 
 @Service
@@ -29,12 +30,13 @@ public class AuthServiceImpl implements AuthService {
                 .strip()
                 .toLowerCase(Locale.ROOT);
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        emailNormalizzata,
-                        request.getPassword()
-                )
-        );
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                emailNormalizzata,
+                                request.getPassword()
+                        )
+                );
 
         UserDetails userDetails =
                 (UserDetails) authentication.getPrincipal();
@@ -43,19 +45,21 @@ public class AuthServiceImpl implements AuthService {
                 .findByEmailIgnoreCase(emailNormalizzata)
                 .orElseThrow();
 
-        String accessToken = jwtService.generaToken(userDetails);
+        String accessToken =
+                jwtService.generaToken(userDetails);
 
-        utente.setUltimoAccesso(java.time.LocalDateTime.now());
+        utente.setUltimoAccesso(LocalDateTime.now());
         utenteRepository.save(utente);
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .expiresAt(jwtService.calcolaScadenza())
-                .utenteId(utente.getId())
+                .id(utente.getId())
                 .nome(utente.getNome())
                 .cognome(utente.getCognome())
                 .email(utente.getEmail())
                 .ruolo(utente.getRuolo())
+                .attivo(utente.isAttivo())
                 .urlImmagineProfilo(utente.getUrlImmagineProfilo())
                 .build();
     }

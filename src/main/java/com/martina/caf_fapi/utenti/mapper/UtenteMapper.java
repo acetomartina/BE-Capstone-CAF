@@ -1,6 +1,7 @@
 package com.martina.caf_fapi.utenti.mapper;
 
 import com.martina.caf_fapi.common.mapper.Mapper;
+import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
@@ -39,6 +40,30 @@ public class UtenteMapper
                 .build();
     }
 
+    public Utente toEntity(CreaUtenteRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        return Utente.builder()
+                .nome(request.nome())
+                .cognome(request.cognome())
+                .codiceFiscale(request.codiceFiscale())
+                .dataNascita(request.dataNascita())
+                .luogoNascita(request.luogoNascita())
+                .email(request.email())
+                .telefono(request.telefono())
+                .indirizzo(request.indirizzo())
+                .comune(request.comune())
+                .provincia(request.provincia())
+                .cap(request.cap())
+                .password(request.password())
+                .ruolo(request.ruolo())
+                .mansione(request.mansione())
+                .numeroMatricola(request.numeroMatricola())
+                .build();
+    }
+
     @Override
     public UtenteResponse toResponse(Utente utente) {
         if (utente == null) {
@@ -73,8 +98,7 @@ public class UtenteMapper
     public void updateEntity(
             UtenteUpdateRequest request,
             Utente utente
-    )
-    {
+    ) {
         if (utente == null || request == null) {
             return;
         }

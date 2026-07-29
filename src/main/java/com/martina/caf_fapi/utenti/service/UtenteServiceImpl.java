@@ -3,7 +3,7 @@ package com.martina.caf_fapi.utenti.service;
 import com.martina.caf_fapi.exception.InvalidDataException;
 import com.martina.caf_fapi.exception.ResourceAlreadyExistsException;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
-import com.martina.caf_fapi.utenti.dto.UtenteRequest;
+import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
@@ -15,6 +15,10 @@ import com.martina.caf_fapi.validation.CodiceFiscaleValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,30 +36,43 @@ public class UtenteServiceImpl implements UtenteService {
 
     @Override
     @Transactional
-    public UtenteResponse creaUtente(UtenteRequest request) {
+    public UtenteResponse creaUtente(
+            CreaUtenteRequest request
+    ) {
+        CreaUtenteRequest requestNormalizzata =
+                normalizzaCreaUtenteRequest(request);
 
-        normalizzaRequest(request);
-
-        if (!codiceFiscaleValidator.isValido(request.getCodiceFiscale())) {
-            throw new InvalidDataException("Il codice fiscale non è valido.");
+        if (!codiceFiscaleValidator.isValido(
+                requestNormalizzata.codiceFiscale()
+        )) {
+            throw new InvalidDataException(
+                    "Il codice fiscale non è valido."
+            );
         }
 
-        verificaDuplicati(request);
+        verificaDuplicati(requestNormalizzata);
 
-        Utente utente = utenteMapper.toEntity(request);
-
-        utente.setPassword(
-                passwordEncoder.encode(request.getPassword())
+        verificaPermessoCreazioneRuolo(
+                requestNormalizzata.ruolo()
         );
 
-        utente.setRuolo(Ruolo.CLIENTE);
+        Utente utente =
+                utenteMapper.toEntity(requestNormalizzata);
+
+        utente.setPassword(
+                passwordEncoder.encode(
+                        requestNormalizzata.password()
+                )
+        );
+
         utente.setAttivo(true);
         utente.setEmailVerificata(false);
         utente.setAccountBloccato(false);
         utente.setTentativiAccessoFalliti(0);
         utente.setPasswordModificataIl(LocalDateTime.now());
 
-        Utente utenteSalvato = utenteRepository.save(utente);
+        Utente utenteSalvato =
+                utenteRepository.save(utente);
 
         return utenteMapper.toResponse(utenteSalvato);
     }
@@ -63,7 +80,6 @@ public class UtenteServiceImpl implements UtenteService {
     @Override
     @Transactional(readOnly = true)
     public UtenteResponse trovaPerId(Long id) {
-
         Utente utente = trovaEntitaPerId(id);
 
         return utenteMapper.toResponse(utente);
@@ -71,8 +87,9 @@ public class UtenteServiceImpl implements UtenteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UtenteResponse> trovaTutti(Pageable pageable) {
-
+    public Page<UtenteResponse> trovaTutti(
+            Pageable pageable
+    ) {
         return utenteRepository.findAll(pageable)
                 .map(utenteMapper::toResponse);
     }
@@ -83,8 +100,8 @@ public class UtenteServiceImpl implements UtenteService {
             Ruolo ruolo,
             Pageable pageable
     ) {
-
-        return utenteRepository.findByRuolo(ruolo, pageable)
+        return utenteRepository
+                .findByRuolo(ruolo, pageable)
                 .map(utenteMapper::toResponse);
     }
 
@@ -94,18 +111,26 @@ public class UtenteServiceImpl implements UtenteService {
             Long id,
             UtenteUpdateRequest request
     ) {
-
         Utente utente = trovaEntitaPerId(id);
 
         normalizzaUpdateRequest(request);
 
-        verificaEmailDuplicata(utente, request);
+        verificaEmailDuplicata(
+                utente,
+                request
+        );
 
-        utenteMapper.updateEntity(request, utente);
+        utenteMapper.updateEntity(
+                request,
+                utente
+        );
 
-        Utente utenteAggiornato = utenteRepository.save(utente);
+        Utente utenteAggiornato =
+                utenteRepository.save(utente);
 
-        return utenteMapper.toResponse(utenteAggiornato);
+        return utenteMapper.toResponse(
+                utenteAggiornato
+        );
     }
 
     @Override
@@ -114,7 +139,6 @@ public class UtenteServiceImpl implements UtenteService {
             Long id,
             Ruolo nuovoRuolo
     ) {
-
         Utente utente = trovaEntitaPerId(id);
 
         if (nuovoRuolo == null) {
@@ -122,6 +146,16 @@ public class UtenteServiceImpl implements UtenteService {
                     "Il nuovo ruolo è obbligatorio."
             );
         }
+
+        if (nuovoRuolo == Ruolo.SUPER_ADMIN) {
+            throw new InvalidDataException(
+                    "Non è possibile assegnare il ruolo SUPER_ADMIN tramite API."
+            );
+        }
+
+        verificaPermessoCreazioneRuolo(
+                nuovoRuolo
+        );
 
         if (utente.getRuolo() == nuovoRuolo) {
             throw new InvalidDataException(
@@ -131,114 +165,86 @@ public class UtenteServiceImpl implements UtenteService {
 
         utente.setRuolo(nuovoRuolo);
 
-        Utente utenteAggiornato = utenteRepository.save(utente);
+        Utente utenteAggiornato =
+                utenteRepository.save(utente);
 
-        return utenteMapper.toResponse(utenteAggiornato);
+        return utenteMapper.toResponse(
+                utenteAggiornato
+        );
     }
 
     @Override
     @Transactional
     public UtenteResponse attivaUtente(Long id) {
-
         Utente utente = trovaEntitaPerId(id);
 
         utente.setAttivo(true);
 
-        Utente utenteAggiornato = utenteRepository.save(utente);
+        Utente utenteAggiornato =
+                utenteRepository.save(utente);
 
-        return utenteMapper.toResponse(utenteAggiornato);
+        return utenteMapper.toResponse(
+                utenteAggiornato
+        );
     }
 
     @Override
     @Transactional
     public UtenteResponse disattivaUtente(Long id) {
-
         Utente utente = trovaEntitaPerId(id);
 
         utente.setAttivo(false);
 
-        Utente utenteAggiornato = utenteRepository.save(utente);
+        Utente utenteAggiornato =
+                utenteRepository.save(utente);
 
-        return utenteMapper.toResponse(utenteAggiornato);
+        return utenteMapper.toResponse(
+                utenteAggiornato
+        );
     }
 
-    private void normalizzaRequest(UtenteRequest request) {
-
-        request.setNome(
+    private CreaUtenteRequest normalizzaCreaUtenteRequest(
+            CreaUtenteRequest request
+    ) {
+        return new CreaUtenteRequest(
                 FormattazioneUtils.normalizzaTitleCase(
-                        request.getNome()
-                )
-        );
-
-        request.setCognome(
+                        request.nome()
+                ),
                 FormattazioneUtils.normalizzaTitleCase(
-                        request.getCognome()
-                )
-        );
-
-        request.setCodiceFiscale(
+                        request.cognome()
+                ),
                 FormattazioneUtils.normalizzaCodiceFiscale(
-                        request.getCodiceFiscale()
-                )
-        );
-
-        request.setLuogoNascita(
+                        request.codiceFiscale()
+                ),
+                request.dataNascita(),
                 FormattazioneUtils.normalizzaTitleCase(
-                        request.getLuogoNascita()
-                )
-        );
-
-        request.setEmail(
+                        request.luogoNascita()
+                ),
                 FormattazioneUtils.normalizzaEmail(
-                        request.getEmail()
-                )
-        );
-
-        request.setTelefono(
+                        request.email()
+                ),
                 FormattazioneUtils.normalizzaTelefono(
-                        request.getTelefono()
-                )
-        );
-
-        request.setIndirizzo(
+                        request.telefono()
+                ),
                 FormattazioneUtils.normalizzaTesto(
-                        request.getIndirizzo()
-                )
-        );
-
-        request.setComune(
+                        request.indirizzo()
+                ),
                 FormattazioneUtils.normalizzaTitleCase(
-                        request.getComune()
-                )
-        );
-
-        request.setProvincia(
+                        request.comune()
+                ),
                 FormattazioneUtils.normalizzaProvincia(
-                        request.getProvincia()
-                )
-        );
-
-        request.setCap(
+                        request.provincia()
+                ),
                 FormattazioneUtils.normalizzaCap(
-                        request.getCap()
-                )
-        );
-
-        request.setMansione(
+                        request.cap()
+                ),
+                request.password(),
+                request.ruolo(),
                 FormattazioneUtils.normalizzaTitleCase(
-                        request.getMansione()
-                )
-        );
-
-        request.setNumeroMatricola(
+                        request.mansione()
+                ),
                 FormattazioneUtils.normalizzaTesto(
-                        request.getNumeroMatricola()
-                )
-        );
-
-        request.setUrlImmagineProfilo(
-                FormattazioneUtils.normalizzaUrl(
-                        request.getUrlImmagineProfilo()
+                        request.numeroMatricola()
                 )
         );
     }
@@ -246,7 +252,6 @@ public class UtenteServiceImpl implements UtenteService {
     private void normalizzaUpdateRequest(
             UtenteUpdateRequest request
     ) {
-
         request.setNome(
                 FormattazioneUtils.normalizzaTitleCase(
                         request.getNome()
@@ -308,16 +313,19 @@ public class UtenteServiceImpl implements UtenteService {
         );
     }
 
-    private void verificaDuplicati(UtenteRequest request) {
-
-        if (utenteRepository.existsByEmailIgnoreCase(request.getEmail())) {
+    private void verificaDuplicati(
+            CreaUtenteRequest request
+    ) {
+        if (utenteRepository.existsByEmailIgnoreCase(
+                request.email()
+        )) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questa email"
             );
         }
 
         if (utenteRepository.existsByCodiceFiscale(
-                request.getCodiceFiscale()
+                request.codiceFiscale()
         )) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questo codice fiscale"
@@ -325,10 +333,10 @@ public class UtenteServiceImpl implements UtenteService {
         }
 
         if (
-                request.getNumeroMatricola() != null
-                        && !request.getNumeroMatricola().isBlank()
+                request.numeroMatricola() != null
+                        && !request.numeroMatricola().isBlank()
                         && utenteRepository.existsByNumeroMatricola(
-                        request.getNumeroMatricola()
+                        request.numeroMatricola()
                 )
         ) {
             throw new ResourceAlreadyExistsException(
@@ -341,9 +349,10 @@ public class UtenteServiceImpl implements UtenteService {
             Utente utente,
             UtenteUpdateRequest request
     ) {
-
         boolean emailModificata =
-                !utente.getEmail().equalsIgnoreCase(request.getEmail());
+                !utente.getEmail().equalsIgnoreCase(
+                        request.getEmail()
+                );
 
         if (
                 emailModificata
@@ -357,11 +366,95 @@ public class UtenteServiceImpl implements UtenteService {
         }
     }
 
-    private Utente trovaEntitaPerId(Long id) {
+    private void verificaPermessoCreazioneRuolo(
+            Ruolo ruoloRichiesto
+    ) {
+        if (ruoloRichiesto == null) {
+            throw new InvalidDataException(
+                    "Il ruolo è obbligatorio."
+            );
+        }
 
+        if (ruoloRichiesto == Ruolo.SUPER_ADMIN) {
+            throw new AccessDeniedException(
+                    "Non è possibile creare o assegnare il ruolo SUPER_ADMIN tramite API."
+            );
+        }
+
+        Ruolo ruoloAutenticato =
+                recuperaRuoloAutenticato();
+
+        boolean consentito =
+                switch (ruoloAutenticato) {
+                    case SUPER_ADMIN ->
+                            ruoloRichiesto == Ruolo.ADMIN
+                                    || ruoloRichiesto == Ruolo.USER
+                                    || ruoloRichiesto == Ruolo.CLIENTE;
+
+                    case ADMIN ->
+                            ruoloRichiesto == Ruolo.USER
+                                    || ruoloRichiesto == Ruolo.CLIENTE;
+
+                    case USER ->
+                            ruoloRichiesto == Ruolo.CLIENTE;
+
+                    case CLIENTE -> false;
+                };
+
+        if (!consentito) {
+            throw new AccessDeniedException(
+                    "Non possiedi i permessi per creare o assegnare il ruolo "
+                            + ruoloRichiesto
+                            + "."
+            );
+        }
+    }
+
+    private Ruolo recuperaRuoloAutenticato() {
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (
+                authentication == null
+                        || !authentication.isAuthenticated()
+        ) {
+            throw new AccessDeniedException(
+                    "Utente non autenticato."
+            );
+        }
+
+        return authentication.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(authority ->
+                        authority.startsWith("ROLE_")
+                                ? authority.substring(5)
+                                : authority
+                )
+                .map(authority -> {
+                    try {
+                        return Ruolo.valueOf(authority);
+                    } catch (IllegalArgumentException exception) {
+                        return null;
+                    }
+                })
+                .filter(ruolo -> ruolo != null)
+                .findFirst()
+                .orElseThrow(() ->
+                        new AccessDeniedException(
+                                "Ruolo dell'utente autenticato non valido."
+                        )
+                );
+    }
+
+    private Utente trovaEntitaPerId(Long id) {
         return utenteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Utente non trovato con id: " + id
-                ));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Utente non trovato con id: " + id
+                        )
+                );
     }
 }

@@ -1,6 +1,6 @@
 package com.martina.caf_fapi.utenti.service;
 
-import com.martina.caf_fapi.utenti.dto.UtenteRequest;
+import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UtenteService {
 
-    UtenteResponse creaUtente(UtenteRequest request);
+    UtenteResponse creaUtente(CreaUtenteRequest request);
 
     UtenteResponse trovaPerId(Long id);
 

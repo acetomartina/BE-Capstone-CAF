@@ -1,6 +1,6 @@
 package com.martina.caf_fapi.utenti.controller;
 
-import com.martina.caf_fapi.utenti.dto.UtenteRequest;
+import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
@@ -23,9 +23,10 @@ public class UtenteController {
 
     @PostMapping
     public ResponseEntity<UtenteResponse> creaUtente(
-            @Valid @RequestBody UtenteRequest request
+            @Valid @RequestBody CreaUtenteRequest request
     ) {
-        UtenteResponse response = utenteService.creaUtente(request);
+        UtenteResponse response =
+                utenteService.creaUtente(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -56,7 +57,10 @@ public class UtenteController {
             @ParameterObject Pageable pageable
     ) {
         return ResponseEntity.ok(
-                utenteService.trovaPerRuolo(ruolo, pageable)
+                utenteService.trovaPerRuolo(
+                        ruolo,
+                        pageable
+                )
         );
     }
 
@@ -66,7 +70,10 @@ public class UtenteController {
             @Valid @RequestBody UtenteUpdateRequest request
     ) {
         return ResponseEntity.ok(
-                utenteService.aggiornaUtente(id, request)
+                utenteService.aggiornaUtente(
+                        id,
+                        request
+                )
         );
     }
 
@@ -76,7 +83,10 @@ public class UtenteController {
             @RequestParam("ruolo") Ruolo nuovoRuolo
     ) {
         return ResponseEntity.ok(
-                utenteService.cambiaRuolo(id, nuovoRuolo)
+                utenteService.cambiaRuolo(
+                        id,
+                        nuovoRuolo
+                )
         );
     }
 

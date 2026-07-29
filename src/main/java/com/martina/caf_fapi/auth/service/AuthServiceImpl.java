@@ -3,12 +3,14 @@ package com.martina.caf_fapi.auth.service;
 import com.martina.caf_fapi.auth.dto.LoginRequest;
 import com.martina.caf_fapi.auth.dto.LoginResponse;
 import com.martina.caf_fapi.auth.security.JwtService;
+import com.martina.caf_fapi.exception.InvalidCredentialsException;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -30,20 +32,31 @@ public class AuthServiceImpl implements AuthService {
                 .strip()
                 .toLowerCase(Locale.ROOT);
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                emailNormalizzata,
-                                request.getPassword()
-                        )
-                );
+        Authentication authentication;
+
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            emailNormalizzata,
+                            request.getPassword()
+                    )
+            );
+        } catch (AuthenticationException ex) {
+            throw new InvalidCredentialsException(
+                    "Email o password non corrette."
+            );
+        }
 
         UserDetails userDetails =
                 (UserDetails) authentication.getPrincipal();
 
         Utente utente = utenteRepository
                 .findByEmailIgnoreCase(emailNormalizzata)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new InvalidCredentialsException(
+                                "Email o password non corrette."
+                        )
+                );
 
         String accessToken =
                 jwtService.generaToken(userDetails);

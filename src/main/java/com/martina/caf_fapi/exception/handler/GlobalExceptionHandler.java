@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,28 +30,6 @@ public class GlobalExceptionHandler {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidation(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
-        Map<String, String> validationErrors = new LinkedHashMap<>();
-
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(error -> validationErrors.put(
-                        error.getField(),
-                        error.getDefaultMessage()
-                ));
-
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "Uno o più campi non sono validi.",
-                request.getRequestURI(),
-                validationErrors
-        );
-    }
-
     @ExceptionHandler(InvalidDataException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidData(
             InvalidDataException ex,
@@ -59,31 +38,8 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleNotFound(
-            ResourceNotFoundException ex,
-            HttpServletRequest request
-    ) {
-        return buildResponse(
-                HttpStatus.NOT_FOUND,
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<ApiErrorResponse> handleAlreadyExists(
-            ResourceAlreadyExistsException ex,
-            HttpServletRequest request
-    ) {
-        return buildResponse(
-                HttpStatus.CONFLICT,
-                ex.getMessage(),
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
         );
     }
 
@@ -95,19 +51,8 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.UNAUTHORIZED,
                 ex.getMessage(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(OperationNotAllowedException.class)
-    public ResponseEntity<ApiErrorResponse> handleOperationNotAllowed(
-            OperationNotAllowedException ex,
-            HttpServletRequest request
-    ) {
-        return buildResponse(
-                HttpStatus.FORBIDDEN,
-                ex.getMessage(),
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
         );
     }
 
@@ -119,17 +64,78 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.FORBIDDEN,
                 ex.getMessage(),
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(OperationNotAllowedException.class)
+    public ResponseEntity<ApiErrorResponse> handleOperationNotAllowed(
+            OperationNotAllowedException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleResourceAlreadyExists(
+            ResourceAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationErrors(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, String> validationErrors = new LinkedHashMap<>();
+
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            validationErrors.put(
+                    fieldError.getField(),
+                    fieldError.getDefaultMessage()
+            );
+        }
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Uno o più campi non sono validi.",
+                request.getRequestURI(),
+                validationErrors
         );
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex,
             HttpServletRequest request
     ) {
-
-        String message = "Parametro non valido.";
+        String message = "Parametro non valido: " + ex.getName() + ".";
 
         if ("ruolo".equals(ex.getName())) {
             message = "Ruolo non valido. Valori ammessi: "
@@ -139,12 +145,13 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 message,
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
         );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleGeneric(
+    public ResponseEntity<ApiErrorResponse> handleGenericException(
             Exception ex,
             HttpServletRequest request
     ) {
@@ -156,20 +163,8 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Si è verificato un errore interno del server.",
-                request.getRequestURI()
-        );
-    }
-
-    private ResponseEntity<ApiErrorResponse> buildResponse(
-            HttpStatus status,
-            String message,
-            String path
-    ) {
-        return buildResponse(
-                status,
-                message,
-                path,
+                "Si è verificato un errore interno.",
+                request.getRequestURI(),
                 null
         );
     }

@@ -23,7 +23,7 @@ public class LoginResponse {
 
     private LocalDateTime expiresAt;
 
-    private Long utenteId;
+    private Long id;
 
     private String nome;
 
@@ -33,5 +33,8 @@ public class LoginResponse {
 
     private Ruolo ruolo;
 
+    private boolean attivo;
+
     private String urlImmagineProfilo;
+
 }

@@ -20,6 +20,8 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
     boolean existsByNumeroMatricola(String numeroMatricola);
 
+    boolean existsByRuolo(Ruolo ruolo);
+
     Page<Utente> findByRuolo(
             Ruolo ruolo,
             Pageable pageable

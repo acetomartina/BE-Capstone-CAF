@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.utenti.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 @Getter
 @Setter
@@ -30,10 +32,21 @@ public class UtenteRequest {
 
     @NotBlank(message = "Il codice fiscale è obbligatorio.")
     @Pattern(
-            regexp = "^[A-Za-z0-9]{16}$",
+            regexp = "^\\s*[A-Za-z0-9]{16}\\s*$",
             message = "Il codice fiscale deve contenere 16 caratteri alfanumerici."
     )
     private String codiceFiscale;
+
+    @JsonSetter("codiceFiscale")
+    public void setCodiceFiscale(String codiceFiscale) {
+        System.out.println(">>> SETTER CHIAMATO: [" + codiceFiscale + "]");
+
+        this.codiceFiscale = codiceFiscale == null
+                ? null
+                : codiceFiscale
+                .strip()
+                .toUpperCase(Locale.ROOT);
+    }
 
     @Past(message = "La data di nascita deve essere nel passato.")
     private LocalDate dataNascita;

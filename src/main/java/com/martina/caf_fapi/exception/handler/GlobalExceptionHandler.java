@@ -6,6 +6,7 @@ import com.martina.caf_fapi.exception.OperationNotAllowedException;
 import com.martina.caf_fapi.exception.ResourceAlreadyExistsException;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.exception.response.ApiErrorResponse;
+import com.martina.caf_fapi.utenti.entity.Ruolo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -103,6 +106,26 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.FORBIDDEN,
                 ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request
+    ) {
+
+        String message = "Parametro non valido.";
+
+        if ("ruolo".equals(ex.getName())) {
+            message = "Ruolo non valido. Valori ammessi: "
+                    + Arrays.toString(Ruolo.values());
+        }
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
                 request.getRequestURI()
         );
     }

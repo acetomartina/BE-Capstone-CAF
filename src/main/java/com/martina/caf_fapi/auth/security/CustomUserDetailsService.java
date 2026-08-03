@@ -3,7 +3,6 @@ package com.martina.caf_fapi.auth.security;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,12 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                         "Credenziali non valide."
                 ));
 
-        return User.builder()
-                .username(utente.getEmail())
-                .password(utente.getPassword())
-                .authorities("ROLE_" + utente.getRuolo().name())
-                .disabled(!utente.isAttivo())
-                .accountLocked(utente.isAccountBloccato())
-                .build();
+        return new UtenteDetails(utente);
     }
 }

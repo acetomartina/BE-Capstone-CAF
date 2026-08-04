@@ -1,7 +1,13 @@
 package com.martina.caf_fapi.utenti.entity;
 
+import com.martina.caf_fapi.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +24,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Utente {
+public class Utente extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +41,8 @@ public class Utente {
             name = "codice_fiscale",
             nullable = false,
             unique = true,
-            length = 16)
+            length = 16
+    )
     private String codiceFiscale;
 
     @Column(name = "data_nascita")
@@ -107,22 +114,4 @@ public class Utente {
     @Column(name = "password_modificata_il")
     private LocalDateTime passwordModificataIl;
 
-    // Date di sistema
-    @Column(name = "creato_il", nullable = false, updatable = false)
-    private LocalDateTime creatoIl;
-
-    @Column(name = "aggiornato_il", nullable = false)
-    private LocalDateTime aggiornatoIl;
-
-    @PrePersist
-    protected void prePersist() {
-        LocalDateTime adesso = LocalDateTime.now();
-        creatoIl = adesso;
-        aggiornatoIl = adesso;
-    }
-
-    @PreUpdate
-    protected void preUpdate() {
-        aggiornatoIl = LocalDateTime.now();
-    }
 }

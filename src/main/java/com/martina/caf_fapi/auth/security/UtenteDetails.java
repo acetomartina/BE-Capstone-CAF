@@ -8,14 +8,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * {@link User} arricchito con il momento dell'ultimo cambio password.
- * <p>
- * Serve a invalidare i JWT emessi prima di quel cambio: il filtro riceve
- * solo un UserDetails, e senza questo campo dovrebbe interrogare di nuovo
- * il database a ogni richiesta autenticata.
+ * {@link User} arricchito con l'identificativo dell'utente
+ * e il momento dell'ultimo cambio password.
  */
 public class UtenteDetails extends User {
 
+    private final Long id;
     private final transient LocalDateTime passwordModificataIl;
 
     public UtenteDetails(Utente utente) {
@@ -31,7 +29,12 @@ public class UtenteDetails extends User {
                 ))
         );
 
+        this.id = utente.getId();
         this.passwordModificataIl = utente.getPasswordModificataIl();
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public LocalDateTime getPasswordModificataIl() {

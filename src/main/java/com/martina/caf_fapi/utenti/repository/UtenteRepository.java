@@ -12,8 +12,6 @@ import java.util.Optional;
 @Repository
 public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
-    Optional<Utente> findByEmailIgnoreCase(String email);
-
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByCodiceFiscale(String codiceFiscale);
@@ -22,8 +20,33 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
     boolean existsByRuolo(Ruolo ruolo);
 
+    Optional<Utente> findByEmailIgnoreCase(String email);
+
+
     Page<Utente> findByRuolo(
             Ruolo ruolo,
+            Pageable pageable
+    );
+
+    Optional<Utente> findByIdAndRuoloAndEliminatoFalse(
+            Long id,
+            Ruolo ruolo
+    );
+
+    Page<Utente> findByRuoloAndEliminatoFalse(
+            Ruolo ruolo,
+            Pageable pageable
+    );
+
+    Page<Utente> findByRuoloAndEliminatoFalseAndCognomeContainingIgnoreCase(
+            Ruolo ruolo,
+            String cognome,
+            Pageable pageable
+    );
+
+    Page<Utente> findByRuoloAndEliminatoFalseAndCodiceFiscaleContainingIgnoreCase(
+            Ruolo ruolo,
+            String codiceFiscale,
             Pageable pageable
     );
 }

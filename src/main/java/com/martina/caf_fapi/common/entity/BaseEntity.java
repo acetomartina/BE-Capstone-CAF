@@ -35,4 +35,13 @@ public abstract class BaseEntity {
     @Column(name = "aggiornato_da")
     private Long aggiornatoDa;
 
+    @Column(name = "eliminato", nullable = false)
+    private Boolean eliminato = false;
+
+    @Column(name = "eliminato_il")
+    private LocalDateTime eliminatoIl;
+
+    @Column(name = "eliminato_da")
+    private Long eliminatoDa;
+
 }

@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,6 +26,14 @@ public class UtenteUpdateRequest {
     @NotBlank(message = "Il cognome è obbligatorio.")
     @Size(max = 80, message = "Il cognome non può superare gli 80 caratteri.")
     private String cognome;
+
+    private LocalDate dataNascita;
+
+    @Size(
+            max = 100,
+            message = "Il luogo di nascita non può superare i 100 caratteri."
+    )
+    private String luogoNascita;
 
     @NotBlank(message = "L'email è obbligatoria.")
     @Email(message = "Formato email non valido.")

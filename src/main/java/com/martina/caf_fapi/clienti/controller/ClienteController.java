@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.clienti.controller;
 
+import com.martina.caf_fapi.clienti.dto.AggiornaClienteRequest;
 import com.martina.caf_fapi.clienti.dto.ClienteResponse;
 import com.martina.caf_fapi.clienti.service.ClienteService;
 import com.martina.caf_fapi.clienti.dto.CreaClienteRequest;
@@ -76,5 +77,15 @@ public class ClienteController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(clienteCreato);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ClienteResponse> aggiornaCliente(
+            @PathVariable Long id,
+            @Valid @RequestBody AggiornaClienteRequest request
+    ) {
+        return ResponseEntity.ok(
+                clienteService.aggiornaCliente(id, request)
+        );
     }
 }

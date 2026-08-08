@@ -265,6 +265,12 @@ public class UtenteServiceImpl implements UtenteService {
                 )
         );
 
+        request.setLuogoNascita(
+                FormattazioneUtils.normalizzaTitleCase(
+                        request.getLuogoNascita()
+                )
+        );
+
         request.setEmail(
                 FormattazioneUtils.normalizzaEmail(
                         request.getEmail()

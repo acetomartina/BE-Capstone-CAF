@@ -1,8 +1,10 @@
 package com.martina.caf_fapi.clienti.service;
 
+import com.martina.caf_fapi.clienti.dto.AggiornaClienteRequest;
 import com.martina.caf_fapi.clienti.dto.ClienteResponse;
 import com.martina.caf_fapi.clienti.mapper.ClienteMapper;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
+import com.martina.caf_fapi.utenti.dto.UtenteUpdateRequest;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
@@ -116,5 +118,38 @@ public class ClienteServiceImpl implements ClienteService {
                 utenteService.creaUtente(creaUtenteRequest);
 
         return trovaPerId(utenteCreato.getId());
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponse aggiornaCliente(
+            Long id,
+            AggiornaClienteRequest request
+    ) {
+
+        trovaClientePerId(id);
+
+        UtenteUpdateRequest utenteUpdateRequest =
+                UtenteUpdateRequest.builder()
+                        .nome(request.nome())
+                        .cognome(request.cognome())
+                        .dataNascita(request.dataNascita())
+                        .luogoNascita(request.luogoNascita())
+                        .email(request.email())
+                        .telefono(request.telefono())
+                        .indirizzo(request.indirizzo())
+                        .comune(request.comune())
+                        .provincia(request.provincia())
+                        .cap(request.cap())
+                        .mansione(null)
+                        .urlImmagineProfilo(null)
+                        .build();
+
+        utenteService.aggiornaUtente(
+                id,
+                utenteUpdateRequest
+        );
+
+        return trovaPerId(id);
     }
 }

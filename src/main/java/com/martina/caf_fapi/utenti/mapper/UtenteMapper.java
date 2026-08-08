@@ -105,6 +105,8 @@ public class UtenteMapper
 
         utente.setNome(request.getNome());
         utente.setCognome(request.getCognome());
+        utente.setDataNascita(request.getDataNascita());
+        utente.setLuogoNascita(request.getLuogoNascita());
         utente.setEmail(request.getEmail());
         utente.setTelefono(request.getTelefono());
         utente.setIndirizzo(request.getIndirizzo());

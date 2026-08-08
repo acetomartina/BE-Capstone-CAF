@@ -6,11 +6,18 @@ import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
+import com.martina.caf_fapi.clienti.dto.CreaClienteRequest;
+import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
+import com.martina.caf_fapi.utenti.dto.UtenteResponse;
+import com.martina.caf_fapi.utenti.service.UtenteService;
+
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +25,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     private final UtenteRepository utenteRepository;
     private final ClienteMapper clienteMapper;
+    private final UtenteService utenteService;
 
     @Override
     @Transactional(readOnly = true)
@@ -79,5 +87,34 @@ public class ClienteServiceImpl implements ClienteService {
                                 "Cliente non trovato con id: " + id
                         )
                 );
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponse creaCliente(CreaClienteRequest request) {
+
+        CreaUtenteRequest creaUtenteRequest =
+                new CreaUtenteRequest(
+                        request.nome(),
+                        request.cognome(),
+                        request.codiceFiscale(),
+                        request.dataNascita(),
+                        request.luogoNascita(),
+                        request.email(),
+                        request.telefono(),
+                        request.indirizzo(),
+                        request.comune(),
+                        request.provincia(),
+                        request.cap(),
+                        request.password(),
+                        Ruolo.CLIENTE,
+                        null,
+                        null
+                );
+
+        UtenteResponse utenteCreato =
+                utenteService.creaUtente(creaUtenteRequest);
+
+        return trovaPerId(utenteCreato.getId());
     }
 }

@@ -2,12 +2,17 @@ package com.martina.caf_fapi.clienti.controller;
 
 import com.martina.caf_fapi.clienti.dto.ClienteResponse;
 import com.martina.caf_fapi.clienti.service.ClienteService;
+import com.martina.caf_fapi.clienti.dto.CreaClienteRequest;
+
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/clienti")
@@ -59,5 +64,17 @@ public class ClienteController {
                         pageable
                 )
         );
+    }
+
+    @PostMapping
+    public ResponseEntity<ClienteResponse> creaCliente(
+            @Valid @RequestBody CreaClienteRequest request
+    ) {
+        ClienteResponse clienteCreato =
+                clienteService.creaCliente(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(clienteCreato);
     }
 }

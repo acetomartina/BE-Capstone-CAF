@@ -12,6 +12,8 @@ import com.martina.caf_fapi.clienti.dto.CreaClienteRequest;
 import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.service.UtenteService;
+import com.martina.caf_fapi.auth.security.UtenteDetails;
+
 
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.time.LocalDateTime;
 
 
 @Service
@@ -151,5 +157,61 @@ public class ClienteServiceImpl implements ClienteService {
         );
 
         return trovaPerId(id);
+    }
+
+    @Override
+    @Transactional
+    public void eliminaCliente(Long id) {
+
+        Utente cliente = trovaClientePerId(id);
+
+        cliente.setEliminato(true);
+        cliente.setEliminatoIl(LocalDateTime.now());
+        cliente.setEliminatoDa(recuperaIdUtenteAutenticato());
+        cliente.setAttivo(false);
+
+        utenteRepository.save(cliente);
+    }
+
+    private Utente trovaClienteEliminatoPerId(Long id) {
+        return utenteRepository.findById(id)
+                .filter(utente -> utente.getRuolo() == Ruolo.CLIENTE)
+                .filter(utente -> Boolean.TRUE.equals(utente.getEliminato()))
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cliente eliminato non trovato con id: " + id
+                        )
+                );
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponse ripristinaCliente(Long id) {
+
+        Utente cliente = trovaClienteEliminatoPerId(id);
+
+        cliente.setEliminato(false);
+        cliente.setEliminatoIl(null);
+        cliente.setEliminatoDa(null);
+        cliente.setAttivo(true);
+
+        Utente clienteRipristinato =
+                utenteRepository.save(cliente);
+
+        return clienteMapper.toResponse(clienteRipristinato);
+    }
+
+    private Long recuperaIdUtenteAutenticato() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        if (authentication != null
+                && authentication.getPrincipal() instanceof UtenteDetails utenteDetails) {
+            return utenteDetails.getId();
+        }
+
+        return null;
     }
 }

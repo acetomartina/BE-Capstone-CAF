@@ -28,4 +28,9 @@ public interface ClienteService {
             String codiceFiscale,
             Pageable pageable
     );
+
+    void eliminaCliente(Long id);
+
+    ClienteResponse ripristinaCliente(Long id);
+
 }

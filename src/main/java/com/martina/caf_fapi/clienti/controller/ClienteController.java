@@ -88,4 +88,24 @@ public class ClienteController {
                 clienteService.aggiornaCliente(id, request)
         );
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminaCliente(
+            @PathVariable Long id
+    ) {
+        clienteService.eliminaCliente(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/ripristina")
+    public ResponseEntity<ClienteResponse> ripristinaCliente(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                clienteService.ripristinaCliente(id)
+        );
+    }
+
+    
 }

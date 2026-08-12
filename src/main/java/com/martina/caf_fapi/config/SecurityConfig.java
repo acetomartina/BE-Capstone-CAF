@@ -101,6 +101,11 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        /* Prima della regola generale: /api/auth/** e'
+                           pubblico, ma /me deve rispondere solo a chi ha
+                           un token valido. L'ordine qui e' significativo. */
+                        .requestMatchers("/api/auth/me").authenticated()
+
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",

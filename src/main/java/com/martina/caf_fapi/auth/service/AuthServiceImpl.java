@@ -5,7 +5,9 @@ import com.martina.caf_fapi.auth.dto.LoginResponse;
 import com.martina.caf_fapi.auth.security.JwtService;
 import com.martina.caf_fapi.auth.security.UtenteDetails;
 import com.martina.caf_fapi.exception.InvalidCredentialsException;
+import com.martina.caf_fapi.utenti.dto.UtenteResponse;
 import com.martina.caf_fapi.utenti.entity.Utente;
+import com.martina.caf_fapi.utenti.mapper.UtenteMapper;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -24,6 +27,20 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UtenteRepository utenteRepository;
     private final JwtService jwtService;
+    private final UtenteMapper utenteMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public UtenteResponse utenteCorrente(String email) {
+
+        Utente utente = utenteRepository
+                .findByEmailIgnoreCase(email.strip().toLowerCase(Locale.ROOT))
+                .orElseThrow(() -> new InvalidCredentialsException(
+                        "Sessione non valida."
+                ));
+
+        return utenteMapper.toResponse(utente);
+    }
 
     @Override
     public LoginResponse login(LoginRequest request) {

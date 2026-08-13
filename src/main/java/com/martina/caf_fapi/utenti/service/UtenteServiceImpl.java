@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +51,6 @@ public class UtenteServiceImpl implements UtenteService {
             );
         }
 
-
         verificaDuplicati(requestNormalizzata);
 
         verificaPermessoCreazioneRuolo(
@@ -58,7 +58,9 @@ public class UtenteServiceImpl implements UtenteService {
         );
 
         Utente utente =
-                utenteMapper.toEntity(requestNormalizzata);
+                utenteMapper.toEntity(
+                        requestNormalizzata
+                );
 
         utente.setPassword(
                 passwordEncoder.encode(
@@ -70,20 +72,29 @@ public class UtenteServiceImpl implements UtenteService {
         utente.setEmailVerificata(false);
         utente.setAccountBloccato(false);
         utente.setTentativiAccessoFalliti(0);
-        utente.setPasswordModificataIl(LocalDateTime.now());
+        utente.setPasswordModificataIl(
+                LocalDateTime.now()
+        );
 
         Utente utenteSalvato =
                 utenteRepository.save(utente);
 
-        return utenteMapper.toResponse(utenteSalvato);
+        return utenteMapper.toResponse(
+                utenteSalvato
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public UtenteResponse trovaPerId(Long id) {
-        Utente utente = trovaEntitaPerId(id);
+    public UtenteResponse trovaPerId(
+            Long id
+    ) {
+        Utente utente =
+                trovaEntitaPerId(id);
 
-        return utenteMapper.toResponse(utente);
+        return utenteMapper.toResponse(
+                utente
+        );
     }
 
     @Override
@@ -91,8 +102,11 @@ public class UtenteServiceImpl implements UtenteService {
     public Page<UtenteResponse> trovaTutti(
             Pageable pageable
     ) {
-        return utenteRepository.findAll(pageable)
-                .map(utenteMapper::toResponse);
+        return utenteRepository
+                .findAll(pageable)
+                .map(
+                        utenteMapper::toResponse
+                );
     }
 
     @Override
@@ -102,8 +116,32 @@ public class UtenteServiceImpl implements UtenteService {
             Pageable pageable
     ) {
         return utenteRepository
-                .findByRuolo(ruolo, pageable)
-                .map(utenteMapper::toResponse);
+                .findByRuolo(
+                        ruolo,
+                        pageable
+                )
+                .map(
+                        utenteMapper::toResponse
+                );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UtenteResponse> trovaOperatoriAttivi(
+            Pageable pageable
+    ) {
+        return utenteRepository
+                .findByRuoloInAndEliminatoFalseAndAttivoTrue(
+                        List.of(
+                                Ruolo.SUPER_ADMIN,
+                                Ruolo.ADMIN,
+                                Ruolo.USER
+                        ),
+                        pageable
+                )
+                .map(
+                        utenteMapper::toResponse
+                );
     }
 
     @Override
@@ -112,7 +150,8 @@ public class UtenteServiceImpl implements UtenteService {
             Long id,
             UtenteUpdateRequest request
     ) {
-        Utente utente = trovaEntitaPerId(id);
+        Utente utente =
+                trovaEntitaPerId(id);
 
         normalizzaUpdateRequest(request);
 
@@ -140,7 +179,8 @@ public class UtenteServiceImpl implements UtenteService {
             Long id,
             Ruolo nuovoRuolo
     ) {
-        Utente utente = trovaEntitaPerId(id);
+        Utente utente =
+                trovaEntitaPerId(id);
 
         if (nuovoRuolo == null) {
             throw new InvalidDataException(
@@ -158,13 +198,18 @@ public class UtenteServiceImpl implements UtenteService {
                 nuovoRuolo
         );
 
-        if (utente.getRuolo() == nuovoRuolo) {
+        if (
+                utente.getRuolo()
+                        == nuovoRuolo
+        ) {
             throw new InvalidDataException(
                     "L'utente possiede già questo ruolo."
             );
         }
 
-        utente.setRuolo(nuovoRuolo);
+        utente.setRuolo(
+                nuovoRuolo
+        );
 
         Utente utenteAggiornato =
                 utenteRepository.save(utente);
@@ -176,8 +221,11 @@ public class UtenteServiceImpl implements UtenteService {
 
     @Override
     @Transactional
-    public UtenteResponse attivaUtente(Long id) {
-        Utente utente = trovaEntitaPerId(id);
+    public UtenteResponse attivaUtente(
+            Long id
+    ) {
+        Utente utente =
+                trovaEntitaPerId(id);
 
         utente.setAttivo(true);
 
@@ -191,8 +239,11 @@ public class UtenteServiceImpl implements UtenteService {
 
     @Override
     @Transactional
-    public UtenteResponse disattivaUtente(Long id) {
-        Utente utente = trovaEntitaPerId(id);
+    public UtenteResponse disattivaUtente(
+            Long id
+    ) {
+        Utente utente =
+                trovaEntitaPerId(id);
 
         utente.setAttivo(false);
 
@@ -323,17 +374,21 @@ public class UtenteServiceImpl implements UtenteService {
     private void verificaDuplicati(
             CreaUtenteRequest request
     ) {
-        if (utenteRepository.existsByEmailIgnoreCase(
-                request.email()
-        )) {
+        if (
+                utenteRepository.existsByEmailIgnoreCase(
+                        request.email()
+                )
+        ) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questa email"
             );
         }
 
-        if (utenteRepository.existsByCodiceFiscale(
-                request.codiceFiscale()
-        )) {
+        if (
+                utenteRepository.existsByCodiceFiscale(
+                        request.codiceFiscale()
+                )
+        ) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questo codice fiscale"
             );
@@ -342,9 +397,10 @@ public class UtenteServiceImpl implements UtenteService {
         if (
                 request.numeroMatricola() != null
                         && !request.numeroMatricola().isBlank()
-                        && utenteRepository.existsByNumeroMatricola(
-                        request.numeroMatricola()
-                )
+                        && utenteRepository
+                        .existsByNumeroMatricola(
+                                request.numeroMatricola()
+                        )
         ) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questo numero di matricola"
@@ -357,15 +413,17 @@ public class UtenteServiceImpl implements UtenteService {
             UtenteUpdateRequest request
     ) {
         boolean emailModificata =
-                !utente.getEmail().equalsIgnoreCase(
-                        request.getEmail()
-                );
+                !utente.getEmail()
+                        .equalsIgnoreCase(
+                                request.getEmail()
+                        );
 
         if (
                 emailModificata
-                        && utenteRepository.existsByEmailIgnoreCase(
-                        request.getEmail()
-                )
+                        && utenteRepository
+                        .existsByEmailIgnoreCase(
+                                request.getEmail()
+                        )
         ) {
             throw new ResourceAlreadyExistsException(
                     "Esiste già un utente con questa email"
@@ -382,7 +440,10 @@ public class UtenteServiceImpl implements UtenteService {
             );
         }
 
-        if (ruoloRichiesto == Ruolo.SUPER_ADMIN) {
+        if (
+                ruoloRichiesto
+                        == Ruolo.SUPER_ADMIN
+        ) {
             throw new AccessDeniedException(
                     "Non è possibile creare o assegnare il ruolo SUPER_ADMIN tramite API."
             );
@@ -432,9 +493,12 @@ public class UtenteServiceImpl implements UtenteService {
             );
         }
 
-        return authentication.getAuthorities()
+        return authentication
+                .getAuthorities()
                 .stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(
+                        GrantedAuthority::getAuthority
+                )
                 .map(authority ->
                         authority.startsWith("ROLE_")
                                 ? authority.substring(5)
@@ -442,12 +506,18 @@ public class UtenteServiceImpl implements UtenteService {
                 )
                 .map(authority -> {
                     try {
-                        return Ruolo.valueOf(authority);
-                    } catch (IllegalArgumentException exception) {
+                        return Ruolo.valueOf(
+                                authority
+                        );
+                    } catch (
+                            IllegalArgumentException exception
+                    ) {
                         return null;
                     }
                 })
-                .filter(ruolo -> ruolo != null)
+                .filter(
+                        ruolo -> ruolo != null
+                )
                 .findFirst()
                 .orElseThrow(() ->
                         new AccessDeniedException(
@@ -456,11 +526,15 @@ public class UtenteServiceImpl implements UtenteService {
                 );
     }
 
-    private Utente trovaEntitaPerId(Long id) {
-        return utenteRepository.findById(id)
+    private Utente trovaEntitaPerId(
+            Long id
+    ) {
+        return utenteRepository
+                .findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Utente non trovato con id: " + id
+                                "Utente non trovato con id: "
+                                        + id
                         )
                 );
     }

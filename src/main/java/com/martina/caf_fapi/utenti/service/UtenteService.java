@@ -9,14 +9,24 @@ import org.springframework.data.domain.Pageable;
 
 public interface UtenteService {
 
-    UtenteResponse creaUtente(CreaUtenteRequest request);
+    UtenteResponse creaUtente(
+            CreaUtenteRequest request
+    );
 
-    UtenteResponse trovaPerId(Long id);
+    UtenteResponse trovaPerId(
+            Long id
+    );
 
-    Page<UtenteResponse> trovaTutti(Pageable pageable);
+    Page<UtenteResponse> trovaTutti(
+            Pageable pageable
+    );
 
     Page<UtenteResponse> trovaPerRuolo(
             Ruolo ruolo,
+            Pageable pageable
+    );
+
+    Page<UtenteResponse> trovaOperatoriAttivi(
             Pageable pageable
     );
 
@@ -30,7 +40,11 @@ public interface UtenteService {
             Ruolo nuovoRuolo
     );
 
-    UtenteResponse attivaUtente(Long id);
+    UtenteResponse attivaUtente(
+            Long id
+    );
 
-    UtenteResponse disattivaUtente(Long id);
+    UtenteResponse disattivaUtente(
+            Long id
+    );
 }

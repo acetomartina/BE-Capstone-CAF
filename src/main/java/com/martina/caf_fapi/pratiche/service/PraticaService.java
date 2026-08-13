@@ -4,19 +4,32 @@ import com.martina.caf_fapi.pratiche.dto.AggiornaPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.CambiaStatoPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.CreaPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.PraticaResponse;
+import com.martina.caf_fapi.pratiche.enums.StatoPratica;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PraticaService {
 
-    Page<PraticaResponse> trovaTutte(Pageable pageable);
+    Page<PraticaResponse> trovaTutte(
+            Pageable pageable
+    );
+
+    Page<PraticaResponse> cerca(
+            String query,
+            StatoPratica stato,
+            Long servizioId,
+            Long responsabileId,
+            Pageable pageable
+    );
 
     Page<PraticaResponse> trovaPerCliente(
             Long clienteId,
             Pageable pageable
     );
 
-    PraticaResponse trovaPerId(Long id);
+    PraticaResponse trovaPerId(
+            Long id
+    );
 
     PraticaResponse creaPratica(
             CreaPraticaRequest request
@@ -31,5 +44,4 @@ public interface PraticaService {
             Long id,
             CambiaStatoPraticaRequest request
     );
-
 }

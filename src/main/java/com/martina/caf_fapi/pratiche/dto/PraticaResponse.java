@@ -14,7 +14,7 @@ public record PraticaResponse(
 
         UtentePraticaResponse cliente,
 
-        Long servizioId,
+        ServizioPraticaResponse servizio,
 
         UtentePraticaResponse responsabile,
 

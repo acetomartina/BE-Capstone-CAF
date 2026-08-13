@@ -15,13 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Gestione degli utenti, riservata allo staff.
- * <p>
- * Il permesso e' dichiarato sul singolo metodo e non una volta sola sulla
- * classe: cosi' aggiungere un endpoint costringe a decidere chi puo'
- * chiamarlo, invece di ereditare un permesso per distrazione.
- */
 @RestController
 @RequestMapping("/api/utenti")
 @RequiredArgsConstructor
@@ -29,7 +22,9 @@ public class UtenteController {
 
     private final UtenteService utenteService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @PostMapping
     public ResponseEntity<UtenteResponse> creaUtente(
             @Valid @RequestBody CreaUtenteRequest request
@@ -42,7 +37,9 @@ public class UtenteController {
                 .body(response);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<UtenteResponse> trovaPerId(
             @PathVariable Long id
@@ -52,19 +49,27 @@ public class UtenteController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @GetMapping
-    public ResponseEntity<Page<UtenteResponse>> trovaTutti(
+    public ResponseEntity<Page<UtenteResponse>>
+    trovaTutti(
             @ParameterObject Pageable pageable
     ) {
         return ResponseEntity.ok(
-                utenteService.trovaTutti(pageable)
+                utenteService.trovaTutti(
+                        pageable
+                )
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @GetMapping("/ruolo/{ruolo}")
-    public ResponseEntity<Page<UtenteResponse>> trovaPerRuolo(
+    public ResponseEntity<Page<UtenteResponse>>
+    trovaPerRuolo(
             @PathVariable Ruolo ruolo,
             @ParameterObject Pageable pageable
     ) {
@@ -76,11 +81,29 @@ public class UtenteController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN', 'ADMIN', 'USER')"
+    )
+    @GetMapping("/operatori")
+    public ResponseEntity<Page<UtenteResponse>>
+    trovaOperatoriAttivi(
+            @ParameterObject Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                utenteService.trovaOperatoriAttivi(
+                        pageable
+                )
+        );
+    }
+
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @PutMapping("/{id}")
     public ResponseEntity<UtenteResponse> aggiornaUtente(
             @PathVariable Long id,
-            @Valid @RequestBody UtenteUpdateRequest request
+            @Valid @RequestBody
+            UtenteUpdateRequest request
     ) {
         return ResponseEntity.ok(
                 utenteService.aggiornaUtente(
@@ -90,11 +113,14 @@ public class UtenteController {
         );
     }
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasRole('SUPER_ADMIN')"
+    )
     @PatchMapping("/{id}/ruolo")
     public ResponseEntity<UtenteResponse> cambiaRuolo(
             @PathVariable Long id,
-            @RequestParam("ruolo") Ruolo nuovoRuolo
+            @RequestParam("ruolo")
+            Ruolo nuovoRuolo
     ) {
         return ResponseEntity.ok(
                 utenteService.cambiaRuolo(
@@ -104,7 +130,9 @@ public class UtenteController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @PatchMapping("/{id}/attiva")
     public ResponseEntity<UtenteResponse> attivaUtente(
             @PathVariable Long id
@@ -114,9 +142,12 @@ public class UtenteController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+    )
     @PatchMapping("/{id}/disattiva")
-    public ResponseEntity<UtenteResponse> disattivaUtente(
+    public ResponseEntity<UtenteResponse>
+    disattivaUtente(
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(

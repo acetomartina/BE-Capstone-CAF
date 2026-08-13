@@ -3,6 +3,7 @@ package com.martina.caf_fapi.pratiche.entity;
 import com.martina.caf_fapi.common.entity.BaseEntity;
 import com.martina.caf_fapi.pratiche.enums.PrioritaPratica;
 import com.martina.caf_fapi.pratiche.enums.StatoPratica;
+import com.martina.caf_fapi.servizi.entity.Servizio;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import jakarta.persistence.*;
 import lombok.*;
@@ -88,11 +89,16 @@ public class Pratica extends BaseEntity {
      * Verrà trasformato in una relazione @ManyToOne quando
      * creeremo il modulo servizi.
      */
-    @Column(
+
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
             name = "servizio_id",
             nullable = false
     )
-    private Long servizioId;
+    private Servizio servizio;
 
     /*
      * Responsabile della pratica madre.

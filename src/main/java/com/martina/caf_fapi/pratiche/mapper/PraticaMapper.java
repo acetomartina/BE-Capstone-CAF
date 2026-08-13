@@ -1,8 +1,10 @@
 package com.martina.caf_fapi.pratiche.mapper;
 
 import com.martina.caf_fapi.pratiche.dto.PraticaResponse;
+import com.martina.caf_fapi.pratiche.dto.ServizioPraticaResponse;
 import com.martina.caf_fapi.pratiche.dto.UtentePraticaResponse;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
+import com.martina.caf_fapi.servizi.entity.Servizio;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +16,7 @@ public class PraticaMapper {
                 pratica.getId(),
                 pratica.getNumeroPratica(),
                 toUtenteResponse(pratica.getCliente()),
-                pratica.getServizioId(),
+                toServizioResponse(pratica.getServizio()),
                 toUtenteResponse(pratica.getResponsabile()),
                 pratica.getOggetto(),
                 pratica.getDescrizione(),
@@ -28,7 +30,9 @@ public class PraticaMapper {
         );
     }
 
-    private UtentePraticaResponse toUtenteResponse(Utente utente) {
+    private UtentePraticaResponse toUtenteResponse(
+            Utente utente
+    ) {
         if (utente == null) {
             return null;
         }
@@ -38,6 +42,22 @@ public class PraticaMapper {
                 utente.getNome(),
                 utente.getCognome(),
                 utente.getEmail()
+        );
+    }
+
+    private ServizioPraticaResponse toServizioResponse(
+            Servizio servizio
+    ) {
+        if (servizio == null) {
+            return null;
+        }
+
+        return new ServizioPraticaResponse(
+                servizio.getId(),
+                servizio.getNome(),
+                servizio.getSlug(),
+                servizio.getMacroArea().getId(),
+                servizio.getMacroArea().getNome()
         );
     }
 }

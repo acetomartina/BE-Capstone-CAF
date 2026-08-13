@@ -40,15 +40,23 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
             Pageable pageable
     );
 
-    Page<Utente> findByRuoloAndEliminatoFalseAndCognomeContainingIgnoreCase(
+    Page<Utente>
+    findByRuoloAndEliminatoFalseAndCognomeContainingIgnoreCase(
             Ruolo ruolo,
             String cognome,
             Pageable pageable
     );
 
-    Page<Utente> findByRuoloAndEliminatoFalseAndCodiceFiscaleContainingIgnoreCase(
+    Page<Utente>
+    findByRuoloAndEliminatoFalseAndCodiceFiscaleContainingIgnoreCase(
             Ruolo ruolo,
             String codiceFiscale,
+            Pageable pageable
+    );
+
+    Page<Utente>
+    findByRuoloInAndEliminatoFalseAndAttivoTrue(
+            List<Ruolo> ruoli,
             Pageable pageable
     );
 

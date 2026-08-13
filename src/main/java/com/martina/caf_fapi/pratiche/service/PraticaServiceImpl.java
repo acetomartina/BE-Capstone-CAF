@@ -1,5 +1,7 @@
 package com.martina.caf_fapi.pratiche.service;
 
+import com.martina.caf_fapi.pratiche.dto.AggiornaPraticaRequest;
+import com.martina.caf_fapi.pratiche.dto.CambiaStatoPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.CreaPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.PraticaResponse;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.Year;
 
 @Service
@@ -39,13 +42,7 @@ public class PraticaServiceImpl implements PraticaService {
 
     @Override
     public PraticaResponse trovaPerId(Long id) {
-        Pratica pratica = praticaRepository
-                .findByIdAndEliminatoFalse(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Pratica non trovata"
-                        )
-                );
+        Pratica pratica = trovaPratica(id);
 
         return praticaMapper.toResponse(pratica);
     }
@@ -86,6 +83,79 @@ public class PraticaServiceImpl implements PraticaService {
         Pratica salvata = praticaRepository.save(pratica);
 
         return praticaMapper.toResponse(salvata);
+    }
+
+    @Override
+    @Transactional
+    public PraticaResponse aggiornaPratica(
+            Long id,
+            AggiornaPraticaRequest request
+    ) {
+        Pratica pratica = trovaPratica(id);
+
+        Utente responsabile = null;
+
+        if (request.responsabileId() != null) {
+            responsabile =
+                    trovaResponsabile(request.responsabileId());
+        }
+
+        pratica.setResponsabile(responsabile);
+        pratica.setOggetto(request.oggetto().trim());
+        pratica.setDescrizione(
+                normalizza(request.descrizione())
+        );
+        pratica.setPriorita(
+                request.priorita() != null
+                        ? request.priorita()
+                        : PrioritaPratica.NORMALE
+        );
+        pratica.setDataScadenza(request.dataScadenza());
+        pratica.setNote(
+                normalizza(request.note())
+        );
+
+        Pratica salvata = praticaRepository.save(pratica);
+
+        return praticaMapper.toResponse(salvata);
+    }
+
+    @Override
+    @Transactional
+    public PraticaResponse cambiaStato(
+            Long id,
+            CambiaStatoPraticaRequest request
+    ) {
+        Pratica pratica = trovaPratica(id);
+
+        StatoPratica nuovoStato = request.stato();
+
+        pratica.setStato(nuovoStato);
+
+        if (
+                nuovoStato == StatoPratica.COMPLETATA
+                        || nuovoStato == StatoPratica.ANNULLATA
+        ) {
+            if (pratica.getChiusoIl() == null) {
+                pratica.setChiusoIl(LocalDateTime.now());
+            }
+        } else {
+            pratica.setChiusoIl(null);
+        }
+
+        Pratica salvata = praticaRepository.save(pratica);
+
+        return praticaMapper.toResponse(salvata);
+    }
+
+    private Pratica trovaPratica(Long id) {
+        return praticaRepository
+                .findByIdAndEliminatoFalse(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Pratica non trovata"
+                        )
+                );
     }
 
     private Utente trovaCliente(Long clienteId) {
@@ -145,14 +215,6 @@ public class PraticaServiceImpl implements PraticaService {
                 || ruolo == Ruolo.USER;
     }
 
-    /*
-     * Per ora il modulo Java "servizi" non esiste ancora.
-     * Verifichiamo quindi la FK senza introdurre query SQL manuali:
-     * EntityManager controlla l'esistenza della riga nella tabella servizi.
-     *
-     * Appena creeremo Servizio.java + ServizioRepository,
-     * questa parte verrà sostituita dal repository dedicato.
-     */
     private void verificaEsistenzaServizio(Long servizioId) {
         Number conteggio = (Number) entityManager
                 .createNativeQuery(
@@ -173,13 +235,6 @@ public class PraticaServiceImpl implements PraticaService {
         }
     }
 
-    /*
-     * Formato iniziale:
-     * CAF-2026-000001
-     *
-     * La generazione definitiva diventerà più robusta quando
-     * introduciamo una sequence/codice dedicato.
-     */
     private String generaNumeroPratica() {
         int anno = Year.now().getValue();
 

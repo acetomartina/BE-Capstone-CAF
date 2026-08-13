@@ -1,5 +1,7 @@
 package com.martina.caf_fapi.pratiche.controller;
 
+import com.martina.caf_fapi.pratiche.dto.AggiornaPraticaRequest;
+import com.martina.caf_fapi.pratiche.dto.CambiaStatoPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.CreaPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.PraticaResponse;
 import com.martina.caf_fapi.pratiche.service.PraticaService;
@@ -48,5 +50,25 @@ public class PraticaController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(praticaCreata);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PraticaResponse> aggiornaPratica(
+            @PathVariable Long id,
+            @Valid @RequestBody AggiornaPraticaRequest request
+    ) {
+        return ResponseEntity.ok(
+                praticaService.aggiornaPratica(id, request)
+        );
+    }
+
+    @PatchMapping("/{id}/stato")
+    public ResponseEntity<PraticaResponse> cambiaStato(
+            @PathVariable Long id,
+            @Valid @RequestBody CambiaStatoPraticaRequest request
+    ) {
+        return ResponseEntity.ok(
+                praticaService.cambiaStato(id, request)
+        );
     }
 }

@@ -2,6 +2,7 @@ package com.martina.caf_fapi.documenti.service;
 
 import com.martina.caf_fapi.documenti.dto.CambiaStatoDocumentoRequest;
 import com.martina.caf_fapi.documenti.dto.DocumentoPraticaResponse;
+import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiResponse;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
 
 import java.util.List;
@@ -23,5 +24,9 @@ public interface DocumentoPraticaService {
     DocumentoPraticaResponse cambiaStato(
             Long id,
             CambiaStatoDocumentoRequest request
+    );
+
+    RiepilogoDocumentiResponse riepilogo(
+            Long praticaId
     );
 }

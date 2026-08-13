@@ -2,6 +2,7 @@ package com.martina.caf_fapi.documenti.service;
 
 import com.martina.caf_fapi.documenti.dto.CambiaStatoDocumentoRequest;
 import com.martina.caf_fapi.documenti.dto.DocumentoPraticaResponse;
+import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiResponse;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoServizio;
 import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
@@ -116,6 +117,76 @@ public class DocumentoPraticaServiceImpl
         );
     }
 
+    @Override
+    public RiepilogoDocumentiResponse riepilogo(
+            Long praticaId
+    ) {
+        verificaPratica(praticaId);
+
+        long totale =
+                documentoRichiestoPraticaRepository
+                        .countByPraticaId(praticaId);
+
+        long mancanti = contaStato(
+                praticaId,
+                StatoDocumentoPratica.MANCANTE
+        );
+
+        long ricevuti = contaStato(
+                praticaId,
+                StatoDocumentoPratica.RICEVUTO
+        );
+
+        long daVerificare = contaStato(
+                praticaId,
+                StatoDocumentoPratica.DA_VERIFICARE
+        );
+
+        long validati = contaStato(
+                praticaId,
+                StatoDocumentoPratica.VALIDATO
+        );
+
+        long rifiutati = contaStato(
+                praticaId,
+                StatoDocumentoPratica.RIFIUTATO
+        );
+
+        long completati =
+                ricevuti
+                        + daVerificare
+                        + validati;
+
+        int percentualeCompletamento =
+                totale == 0
+                        ? 0
+                        : (int) Math.round(
+                        completati * 100.0 / totale
+                );
+
+        return new RiepilogoDocumentiResponse(
+                totale,
+                mancanti,
+                ricevuti,
+                daVerificare,
+                validati,
+                rifiutati,
+                completati,
+                percentualeCompletamento
+        );
+    }
+
+    private long contaStato(
+            Long praticaId,
+            StatoDocumentoPratica stato
+    ) {
+        return documentoRichiestoPraticaRepository
+                .countByPraticaIdAndStato(
+                        praticaId,
+                        stato
+                );
+    }
+
     private DocumentoRichiestoPratica trovaDocumento(
             Long id
     ) {
@@ -128,11 +199,13 @@ public class DocumentoPraticaServiceImpl
                 );
     }
 
-    private void verificaPratica(Long praticaId) {
+    private void verificaPratica(
+            Long praticaId
+    ) {
         if (
-                !praticaRepository
+                praticaRepository
                         .findByIdAndEliminatoFalse(praticaId)
-                        .isPresent()
+                        .isEmpty()
         ) {
             throw new EntityNotFoundException(
                     "Pratica non trovata"

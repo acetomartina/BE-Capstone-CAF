@@ -2,6 +2,7 @@ package com.martina.caf_fapi.documenti.controller;
 
 import com.martina.caf_fapi.documenti.dto.CambiaStatoDocumentoRequest;
 import com.martina.caf_fapi.documenti.dto.DocumentoPraticaResponse;
+import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiResponse;
 import com.martina.caf_fapi.documenti.service.DocumentoPraticaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,19 @@ public class DocumentoPraticaController {
                         id,
                         request
                 )
+        );
+    }
+
+    @GetMapping(
+            "/api/pratiche/{praticaId}/documenti/riepilogo"
+    )
+    public ResponseEntity<RiepilogoDocumentiResponse>
+    riepilogo(
+            @PathVariable Long praticaId
+    ) {
+        return ResponseEntity.ok(
+                documentoPraticaService
+                        .riepilogo(praticaId)
         );
     }
 }

@@ -43,6 +43,30 @@ public class PraticaServiceImpl implements PraticaService {
     }
 
     @Override
+    public Page<PraticaResponse> trovaPerCliente(
+            Long clienteId,
+            Pageable pageable
+    ) {
+        utenteRepository
+                .findByIdAndRuoloAndEliminatoFalse(
+                        clienteId,
+                        Ruolo.CLIENTE
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Cliente non trovato"
+                        )
+                );
+
+        return praticaRepository
+                .findByClienteIdAndEliminatoFalse(
+                        clienteId,
+                        pageable
+                )
+                .map(praticaMapper::toResponse);
+    }
+
+    @Override
     public PraticaResponse trovaPerId(Long id) {
         Pratica pratica = trovaPratica(id);
 
@@ -165,7 +189,7 @@ public class PraticaServiceImpl implements PraticaService {
     }
 
     private Utente trovaCliente(Long clienteId) {
-        Utente cliente = utenteRepository
+        return utenteRepository
                 .findByIdAndRuoloAndEliminatoFalse(
                         clienteId,
                         Ruolo.CLIENTE
@@ -175,14 +199,6 @@ public class PraticaServiceImpl implements PraticaService {
                                 "Cliente non trovato"
                         )
                 );
-
-        if (!cliente.isAttivo()) {
-            throw new IllegalArgumentException(
-                    "Il cliente selezionato non è attivo"
-            );
-        }
-
-        return cliente;
     }
 
     private Utente trovaResponsabile(Long responsabileId) {

@@ -71,4 +71,17 @@ public class PraticaController {
                 praticaService.cambiaStato(id, request)
         );
     }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<Page<PraticaResponse>> trovaPerCliente(
+            @PathVariable Long clienteId,
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                praticaService.trovaPerCliente(
+                        clienteId,
+                        pageable
+                )
+        );
+    }
 }

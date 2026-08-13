@@ -11,6 +11,11 @@ public interface PraticaService {
 
     Page<PraticaResponse> trovaTutte(Pageable pageable);
 
+    Page<PraticaResponse> trovaPerCliente(
+            Long clienteId,
+            Pageable pageable
+    );
+
     PraticaResponse trovaPerId(Long id);
 
     PraticaResponse creaPratica(
@@ -26,4 +31,5 @@ public interface PraticaService {
             Long id,
             CambiaStatoPraticaRequest request
     );
+
 }

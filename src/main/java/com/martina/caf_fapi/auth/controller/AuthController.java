@@ -1,11 +1,13 @@
 package com.martina.caf_fapi.auth.controller;
 
+import com.martina.caf_fapi.auth.dto.AttivaAccountRequest;
 import com.martina.caf_fapi.auth.dto.LoginRequest;
 import com.martina.caf_fapi.auth.dto.LoginResponse;
 import com.martina.caf_fapi.auth.dto.MessaggioResponse;
 import com.martina.caf_fapi.auth.dto.RecuperoPasswordRequest;
 import com.martina.caf_fapi.auth.dto.ResetPasswordRequest;
 import com.martina.caf_fapi.auth.security.UtenteDetails;
+import com.martina.caf_fapi.auth.service.AccountActivationService;
 import com.martina.caf_fapi.auth.service.AuthService;
 import com.martina.caf_fapi.auth.service.PasswordResetService;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
@@ -31,36 +33,48 @@ public class AuthController {
     private static final String MESSAGGIO_RESET =
             "Password aggiornata.";
 
+    private static final String MESSAGGIO_ATTIVAZIONE =
+            "Account attivato correttamente.";
+
     private final AuthService authService;
+
     private final PasswordResetService passwordResetService;
+
+    private final AccountActivationService accountActivationService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        return ResponseEntity.ok(authService.login(request));
+        return ResponseEntity.ok(
+                authService.login(request)
+        );
     }
 
     /**
-     * Risponde sempre 200 con lo stesso messaggio, che l'account esista
-     * o no: è la difesa contro l'enumerazione degli indirizzi.
-     */
-    /**
      * Chi sono io, secondo il token che sto usando.
-     * <p>
-     * Il frontend la chiama a ogni avvio per ricostruire la sessione: i dati
-     * arrivano dal database, non dal browser, quindi un cambio di ruolo o
-     * una disattivazione hanno effetto al primo ricaricamento.
+     *
+     * Il frontend la chiama a ogni avvio per ricostruire la sessione:
+     * i dati arrivano dal database e non dal browser.
      */
     @GetMapping("/me")
     public ResponseEntity<UtenteResponse> utenteCorrente(
             @AuthenticationPrincipal UtenteDetails dettagli
     ) {
         return ResponseEntity.ok(
-                authService.utenteCorrente(dettagli.getUsername())
+                authService.utenteCorrente(
+                        dettagli.getUsername()
+                )
         );
     }
 
+    /**
+     * Risponde sempre 200 con lo stesso messaggio,
+     * che l'account esista oppure no.
+     *
+     * In questo modo non riveliamo se una determinata
+     * email è registrata nel sistema.
+     */
     @PostMapping("/recupera-password")
     public ResponseEntity<MessaggioResponse> recuperaPassword(
             @Valid @RequestBody RecuperoPasswordRequest request
@@ -69,7 +83,9 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 MessaggioResponse.builder()
-                        .messaggio(MESSAGGIO_RECUPERO)
+                        .messaggio(
+                                MESSAGGIO_RECUPERO
+                        )
                         .build()
         );
     }
@@ -78,11 +94,33 @@ public class AuthController {
     public ResponseEntity<MessaggioResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ) {
-        passwordResetService.reimpostaPassword(request);
+        passwordResetService.reimpostaPassword(
+                request
+        );
 
         return ResponseEntity.ok(
                 MessaggioResponse.builder()
-                        .messaggio(MESSAGGIO_RESET)
+                        .messaggio(
+                                MESSAGGIO_RESET
+                        )
+                        .build()
+        );
+    }
+
+    @PostMapping("/attiva-account")
+    public ResponseEntity<MessaggioResponse> attivaAccount(
+            @Valid @RequestBody AttivaAccountRequest request
+    ) {
+        accountActivationService.attivaAccount(
+                request.getToken(),
+                request.getNuovaPassword()
+        );
+
+        return ResponseEntity.ok(
+                MessaggioResponse.builder()
+                        .messaggio(
+                                MESSAGGIO_ATTIVAZIONE
+                        )
                         .build()
         );
     }

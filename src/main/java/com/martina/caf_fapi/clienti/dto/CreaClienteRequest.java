@@ -53,18 +53,6 @@ public record CreaClienteRequest(
                 regexp = "^\\d{5}$",
                 message = "Il CAP deve contenere 5 cifre"
         )
-        String cap,
-
-        @NotBlank(message = "La password è obbligatoria")
-        @Size(
-                min = 8,
-                max = 72,
-                message = "La password deve contenere tra 8 e 72 caratteri"
-        )
-        @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
-                message = "La password deve contenere almeno una maiuscola, una minuscola, un numero e un carattere speciale"
-        )
-        String password
+        String cap
 ) {
 }

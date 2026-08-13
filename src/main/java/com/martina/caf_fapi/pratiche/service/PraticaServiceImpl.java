@@ -12,6 +12,7 @@ import com.martina.caf_fapi.pratiche.repository.PraticaRepository;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
+import com.martina.caf_fapi.documenti.service.DocumentoPraticaService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class PraticaServiceImpl implements PraticaService {
     private final UtenteRepository utenteRepository;
     private final PraticaMapper praticaMapper;
     private final EntityManager entityManager;
+    private final DocumentoPraticaService documentoPraticaService;
 
     @Override
     public Page<PraticaResponse> trovaTutte(Pageable pageable) {
@@ -81,6 +83,10 @@ public class PraticaServiceImpl implements PraticaService {
                 .build();
 
         Pratica salvata = praticaRepository.save(pratica);
+
+        documentoPraticaService.generaChecklistDaServizio(
+                salvata
+        );
 
         return praticaMapper.toResponse(salvata);
     }

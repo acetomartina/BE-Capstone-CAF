@@ -15,8 +15,6 @@ public record CreaPraticaRequest(
         @NotNull(message = "Il servizio è obbligatorio")
         Long servizioId,
 
-        Long responsabileId,
-
         @NotBlank(message = "L'oggetto della pratica è obbligatorio")
         @Size(
                 max = 200,

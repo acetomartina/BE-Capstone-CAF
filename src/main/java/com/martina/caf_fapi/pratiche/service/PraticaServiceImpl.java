@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.pratiche.service;
 
+import com.martina.caf_fapi.auth.security.UtenteDetails;
 import com.martina.caf_fapi.documenti.service.DocumentoPraticaService;
 import com.martina.caf_fapi.pratiche.dto.AggiornaPraticaRequest;
 import com.martina.caf_fapi.pratiche.dto.CambiaStatoPraticaRequest;
@@ -19,6 +20,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,6 +109,14 @@ public class PraticaServiceImpl
         );
     }
 
+    /*
+     * Il responsabile della pratica viene assegnato
+     * automaticamente all'utente autenticato che
+     * sta creando la pratica.
+     *
+     * Il frontend non può scegliere o alterare
+     * il responsabile durante la creazione.
+     */
     @Override
     @Transactional
     public PraticaResponse creaPratica(
@@ -121,17 +132,8 @@ public class PraticaServiceImpl
                         request.servizioId()
                 );
 
-        Utente responsabile = null;
-
-        if (
-                request.responsabileId()
-                        != null
-        ) {
-            responsabile =
-                    trovaResponsabile(
-                            request.responsabileId()
-                    );
-        }
+        Utente responsabile =
+                trovaResponsabileAutenticato();
 
         Pratica pratica =
                 Pratica.builder()
@@ -177,6 +179,11 @@ public class PraticaServiceImpl
                         pratica
                 );
 
+        /*
+         * La checklist viene generata
+         * automaticamente in base
+         * al servizio selezionato.
+         */
         documentoPraticaService
                 .generaChecklistDaServizio(
                         salvata
@@ -198,6 +205,11 @@ public class PraticaServiceImpl
 
         Utente responsabile = null;
 
+        /*
+         * Nell'aggiornamento manteniamo
+         * la possibilità di riassegnare
+         * la pratica.
+         */
         if (
                 request.responsabileId()
                         != null
@@ -341,6 +353,40 @@ public class PraticaServiceImpl
                 );
     }
 
+    /*
+     * Recupera direttamente il principal
+     * autenticato dal SecurityContext.
+     */
+    private Utente trovaResponsabileAutenticato() {
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (
+                authentication == null
+                        ||
+                        !authentication.isAuthenticated()
+                        ||
+                        !(
+                                authentication.getPrincipal()
+                                        instanceof UtenteDetails utenteDetails
+                        )
+        ) {
+            throw new IllegalStateException(
+                    "Utente autenticato non disponibile"
+            );
+        }
+
+        return trovaResponsabile(
+                utenteDetails.getId()
+        );
+    }
+
+    /*
+     * Utilizzato anche durante la riassegnazione
+     * manuale di una pratica.
+     */
     private Utente trovaResponsabile(
             Long responsabileId
     ) {

@@ -61,20 +61,36 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
 
+
     @Override
     @Transactional(readOnly = true)
     public Page<ClienteResponse> trovaTutti(
+            Boolean attivo,
             Pageable pageable
     ) {
+        Page<Utente> clienti;
 
-        return utenteRepository
-                .findByRuoloAndEliminatoFalse(
-                        Ruolo.CLIENTE,
-                        pageable
-                )
-                .map(clienteMapper::toResponse);
+        if (attivo == null) {
+            clienti =
+                    utenteRepository
+                            .findByRuoloAndEliminatoFalse(
+                                    Ruolo.CLIENTE,
+                                    pageable
+                            );
+        } else {
+            clienti =
+                    utenteRepository
+                            .findByRuoloAndEliminatoFalseAndAttivo(
+                                    Ruolo.CLIENTE,
+                                    attivo,
+                                    pageable
+                            );
+        }
+
+        return clienti.map(
+                clienteMapper::toResponse
+        );
     }
-
 
     @Override
     @Transactional(readOnly = true)

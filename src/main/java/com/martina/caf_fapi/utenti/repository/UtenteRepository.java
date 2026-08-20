@@ -83,4 +83,10 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
             @Param("ruolo") Ruolo ruolo,
             @Param("query") String query
     );
+
+    Page<Utente> findByRuoloAndEliminatoFalseAndAttivo(
+            Ruolo ruolo,
+            boolean attivo,
+            Pageable pageable
+    );
 }

@@ -23,12 +23,18 @@ public class ClienteController {
 
     private final ClienteService clienteService;
 
+
     @GetMapping
     public ResponseEntity<Page<ClienteResponse>> trovaTutti(
+            @RequestParam(required = false)
+            Boolean attivo,
             Pageable pageable
     ) {
         return ResponseEntity.ok(
-                clienteService.trovaTutti(pageable)
+                clienteService.trovaTutti(
+                        attivo,
+                        pageable
+                )
         );
     }
 

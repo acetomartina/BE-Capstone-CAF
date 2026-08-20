@@ -17,7 +17,10 @@ public interface ClienteService {
             AggiornaClienteRequest request
     );
 
-    Page<ClienteResponse> trovaTutti(Pageable pageable);
+    Page<ClienteResponse> trovaTutti(
+            Boolean attivo,
+            Pageable pageable
+    );
 
     Page<ClienteResponse> cercaPerCognome(
             String cognome,

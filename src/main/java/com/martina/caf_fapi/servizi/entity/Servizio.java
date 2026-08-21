@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(
@@ -90,6 +91,12 @@ public class Servizio {
             columnDefinition = "TEXT"
     )
     private String notaPrezzo;
+
+    @Column(
+            precision = 10,
+            scale = 2
+    )
+    private BigDecimal prezzo;
 
     @Column(name = "durata_minuti")
     private Integer durataMinuti;

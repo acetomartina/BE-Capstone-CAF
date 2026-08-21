@@ -33,6 +33,17 @@ public class DocumentoRichiestoServizio {
 
     @Column(nullable = false)
     @Builder.Default
+    private boolean attivo = true;
+
+    @Column(
+            name = "visibile_al_cliente",
+            nullable = false
+    )
+    @Builder.Default
+    private boolean visibileAlCliente = true;
+
+    @Column(nullable = false)
+    @Builder.Default
     private boolean obbligatorio = true;
 
     @Column(
@@ -40,4 +51,6 @@ public class DocumentoRichiestoServizio {
             nullable = false
     )
     private Integer ordineVisualizzazione;
+
+
 }

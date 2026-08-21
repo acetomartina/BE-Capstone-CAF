@@ -42,7 +42,7 @@ public class DocumentoPraticaServiceImpl
 
         List<DocumentoRichiestoServizio> documentiStandard =
                 documentoRichiestoServizioRepository
-                        .findByServizioIdOrderByOrdineVisualizzazioneAsc(
+                        .findByServizioIdAndAttivoTrueOrderByOrdineVisualizzazioneAsc(
                                 pratica.getServizio().getId()
                         );
 

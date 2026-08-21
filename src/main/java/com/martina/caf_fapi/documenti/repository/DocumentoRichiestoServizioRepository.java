@@ -9,7 +9,7 @@ public interface DocumentoRichiestoServizioRepository
         extends JpaRepository<DocumentoRichiestoServizio, Long> {
 
     List<DocumentoRichiestoServizio>
-    findByServizioIdOrderByOrdineVisualizzazioneAsc(
+    findByServizioIdAndAttivoTrueOrderByOrdineVisualizzazioneAsc(
             Long servizioId
     );
 }

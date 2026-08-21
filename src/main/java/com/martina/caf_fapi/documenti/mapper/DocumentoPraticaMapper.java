@@ -18,7 +18,7 @@ public class DocumentoPraticaMapper {
                 documento.getPratica().getNumeroPratica(),
                 documento.getEtichetta(),
                 documento.getSuggerimento(),
-                documento.isObbligatorio(),
+                documento.getTipoObbligatorieta(),
                 documento.getStato(),
                 toUtenteResponse(documento.getRichiestoDa()),
                 documento.getCreatoIl(),

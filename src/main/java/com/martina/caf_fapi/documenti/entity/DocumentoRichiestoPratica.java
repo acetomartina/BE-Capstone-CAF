@@ -1,6 +1,7 @@
 package com.martina.caf_fapi.documenti.entity;
 
 import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
+import com.martina.caf_fapi.documenti.enums.TipoObbligatorietaDocumento;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import jakarta.persistence.*;
@@ -48,9 +49,15 @@ public class DocumentoRichiestoPratica {
     @Column(columnDefinition = "TEXT")
     private String suggerimento;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "tipo_obbligatorieta",
+            nullable = false,
+            length = 30
+    )
     @Builder.Default
-    private boolean obbligatorio = true;
+    private TipoObbligatorietaDocumento tipoObbligatorieta =
+            TipoObbligatorietaDocumento.OBBLIGATORIO;
 
     @Enumerated(EnumType.STRING)
     @Column(

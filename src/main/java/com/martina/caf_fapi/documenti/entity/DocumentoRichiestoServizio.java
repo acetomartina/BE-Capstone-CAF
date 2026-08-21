@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.documenti.entity;
 
+import com.martina.caf_fapi.documenti.enums.TipoObbligatorietaDocumento;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,9 +43,16 @@ public class DocumentoRichiestoServizio {
     @Builder.Default
     private boolean visibileAlCliente = true;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "tipo_obbligatorieta",
+            nullable = false,
+            length = 30
+    )
     @Builder.Default
-    private boolean obbligatorio = true;
+    private TipoObbligatorietaDocumento tipoObbligatorieta =
+            TipoObbligatorietaDocumento.OBBLIGATORIO;
+
 
     @Column(
             name = "ordine_visualizzazione",

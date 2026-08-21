@@ -61,8 +61,8 @@ public class DocumentoPraticaServiceImpl
                                         .suggerimento(
                                                 documento.getSuggerimento()
                                         )
-                                        .obbligatorio(
-                                                documento.isObbligatorio()
+                                        .tipoObbligatorieta(
+                                                documento.getTipoObbligatorieta()
                                         )
                                         .stato(
                                                 StatoDocumentoPratica.MANCANTE

@@ -10,5 +10,5 @@ public enum StatoDocumentoPratica {
 
     VALIDATO,
 
-    RIFIUTATO
+    RIFIUTATO;
 }

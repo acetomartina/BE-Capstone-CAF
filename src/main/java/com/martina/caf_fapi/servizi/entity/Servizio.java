@@ -117,6 +117,18 @@ public class Servizio {
     private boolean inEvidenza;
 
     @Column(
+            name = "genera_pratica",
+            nullable = false
+    )
+    private boolean generaPratica;
+
+    @Column(
+            name = "richiede_documenti",
+            nullable = false
+    )
+    private boolean richiedeDocumenti;
+
+    @Column(
             name = "ordine_visualizzazione",
             nullable = false
     )

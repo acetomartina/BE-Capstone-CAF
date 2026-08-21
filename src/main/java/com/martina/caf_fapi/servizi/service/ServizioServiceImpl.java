@@ -105,12 +105,15 @@ public class ServizioServiceImpl
                 servizio.getDestinatari(),
                 servizio.getRequisiti(),
                 servizio.getComeFunziona(),
+                servizio.getPrezzo(),
                 servizio.getPrezzoTesto(),
                 servizio.getNotaPrezzo(),
                 servizio.getDurataMinuti(),
                 servizio.isPrenotabile(),
                 servizio.isRichiedibileOnline(),
                 servizio.isInEvidenza(),
+                servizio.isGeneraPratica(),
+                servizio.isRichiedeDocumenti(),
                 servizio.getOrdineVisualizzazione()
         );
     }

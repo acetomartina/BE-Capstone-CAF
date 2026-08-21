@@ -1,5 +1,7 @@
 package com.martina.caf_fapi.servizi.dto;
 
+import java.math.BigDecimal;
+
 public record ServizioResponse(
 
         Long id,
@@ -24,6 +26,8 @@ public record ServizioResponse(
 
         String comeFunziona,
 
+        BigDecimal prezzo,
+
         String prezzoTesto,
 
         String notaPrezzo,
@@ -35,6 +39,10 @@ public record ServizioResponse(
         boolean richiedibileOnline,
 
         boolean inEvidenza,
+
+        boolean generaPratica,
+
+        boolean richiedeDocumenti,
 
         Integer ordineVisualizzazione
 ) {

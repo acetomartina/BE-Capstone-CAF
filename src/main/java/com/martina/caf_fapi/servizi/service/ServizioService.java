@@ -2,6 +2,7 @@ package com.martina.caf_fapi.servizi.service;
 
 import com.martina.caf_fapi.servizi.dto.MacroAreaResponse;
 import com.martina.caf_fapi.servizi.dto.ServizioResponse;
+import com.martina.caf_fapi.servizi.dto.UpdateServizioRequest;
 
 import java.util.List;
 
@@ -17,5 +18,10 @@ public interface ServizioService {
 
     ServizioResponse trovaServizioPerId(
             Long id
+    );
+
+    ServizioResponse aggiornaServizio(
+            Long id,
+            UpdateServizioRequest request
     );
 }

@@ -2,6 +2,7 @@ package com.martina.caf_fapi.servizi.service;
 
 import com.martina.caf_fapi.servizi.dto.MacroAreaResponse;
 import com.martina.caf_fapi.servizi.dto.ServizioResponse;
+import com.martina.caf_fapi.servizi.dto.UpdateServizioRequest;
 import com.martina.caf_fapi.servizi.entity.MacroArea;
 import com.martina.caf_fapi.servizi.entity.Servizio;
 import com.martina.caf_fapi.servizi.repository.MacroAreaRepository;
@@ -21,6 +22,132 @@ public class ServizioServiceImpl
 
     private final MacroAreaRepository macroAreaRepository;
     private final ServizioRepository servizioRepository;
+
+    @Override
+    @Transactional
+    public ServizioResponse aggiornaServizio(
+            Long id,
+            UpdateServizioRequest request
+    ) {
+        Servizio servizio = servizioRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Servizio non trovato"
+                        )
+                );
+
+        if (request.nome() != null) {
+            servizio.setNome(request.nome());
+        }
+
+        if (request.descrizioneBreve() != null) {
+            servizio.setDescrizioneBreve(
+                    request.descrizioneBreve()
+            );
+        }
+
+        if (request.descrizione() != null) {
+            servizio.setDescrizione(
+                    request.descrizione()
+            );
+        }
+
+        if (request.destinatari() != null) {
+            servizio.setDestinatari(
+                    request.destinatari()
+            );
+        }
+
+        if (request.requisiti() != null) {
+            servizio.setRequisiti(
+                    request.requisiti()
+            );
+        }
+
+        if (request.comeFunziona() != null) {
+            servizio.setComeFunziona(
+                    request.comeFunziona()
+            );
+        }
+
+        if (request.prezzo() != null) {
+            servizio.setPrezzo(
+                    request.prezzo()
+            );
+        }
+
+        if (request.prezzoTesto() != null) {
+            servizio.setPrezzoTesto(
+                    request.prezzoTesto()
+            );
+        }
+
+        if (request.notaPrezzo() != null) {
+            servizio.setNotaPrezzo(
+                    request.notaPrezzo()
+            );
+        }
+
+        if (request.durataMinuti() != null) {
+            servizio.setDurataMinuti(
+                    request.durataMinuti()
+            );
+        }
+
+        if (request.prenotabile() != null) {
+            servizio.setPrenotabile(
+                    request.prenotabile()
+            );
+        }
+
+        if (request.richiedibileOnline() != null) {
+            servizio.setRichiedibileOnline(
+                    request.richiedibileOnline()
+            );
+        }
+
+        if (request.inEvidenza() != null) {
+            servizio.setInEvidenza(
+                    request.inEvidenza()
+            );
+        }
+
+        if (request.generaPratica() != null) {
+            servizio.setGeneraPratica(
+                    request.generaPratica()
+            );
+        }
+
+        if (request.richiedeDocumenti() != null) {
+            servizio.setRichiedeDocumenti(
+                    request.richiedeDocumenti()
+            );
+        }
+
+        if (request.ordineVisualizzazione() != null) {
+            servizio.setOrdineVisualizzazione(
+                    request.ordineVisualizzazione()
+            );
+        }
+
+        if (request.attivo() != null) {
+            servizio.setAttivo(
+                    request.attivo()
+            );
+        }
+
+        if (request.validoFinoAl() != null) {
+            servizio.setValidoFinoAl(
+                    request.validoFinoAl()
+            );
+        }
+
+        Servizio aggiornato =
+                servizioRepository.save(servizio);
+
+        return toServizioResponse(aggiornato);
+    }
 
     @Override
     public List<MacroAreaResponse> trovaMacroAreeAttive() {
@@ -114,7 +241,9 @@ public class ServizioServiceImpl
                 servizio.isInEvidenza(),
                 servizio.isGeneraPratica(),
                 servizio.isRichiedeDocumenti(),
-                servizio.getOrdineVisualizzazione()
+                servizio.getOrdineVisualizzazione(),
+                servizio.isAttivo(),
+                servizio.getValidoFinoAl()
         );
     }
 }

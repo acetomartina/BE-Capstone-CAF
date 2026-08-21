@@ -2,7 +2,9 @@ package com.martina.caf_fapi.servizi.controller;
 
 import com.martina.caf_fapi.servizi.dto.MacroAreaResponse;
 import com.martina.caf_fapi.servizi.dto.ServizioResponse;
+import com.martina.caf_fapi.servizi.dto.UpdateServizioRequest;
 import com.martina.caf_fapi.servizi.service.ServizioService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,6 +58,23 @@ public class ServizioController {
     ) {
         return ResponseEntity.ok(
                 servizioService.trovaServizioPerId(id)
+        );
+    }
+
+    @PatchMapping("/api/servizi/{id}")
+    @PreAuthorize(
+            "hasAnyRole('SUPER_ADMIN', 'ADMIN')"
+    )
+    public ResponseEntity<ServizioResponse>
+    aggiornaServizio(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateServizioRequest request
+    ) {
+        return ResponseEntity.ok(
+                servizioService.aggiornaServizio(
+                        id,
+                        request
+                )
         );
     }
 }

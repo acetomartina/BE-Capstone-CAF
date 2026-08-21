@@ -1,6 +1,7 @@
 package com.martina.caf_fapi.servizi.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record ServizioResponse(
 
@@ -44,6 +45,10 @@ public record ServizioResponse(
 
         boolean richiedeDocumenti,
 
-        Integer ordineVisualizzazione
+        Integer ordineVisualizzazione,
+
+        boolean attivo,
+
+        LocalDate validoFinoAl
 ) {
 }

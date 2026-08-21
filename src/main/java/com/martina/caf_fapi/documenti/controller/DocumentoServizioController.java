@@ -2,6 +2,7 @@ package com.martina.caf_fapi.documenti.controller;
 
 import com.martina.caf_fapi.documenti.dto.CreateDocumentoServizioRequest;
 import com.martina.caf_fapi.documenti.dto.DocumentoServizioResponse;
+import com.martina.caf_fapi.documenti.dto.RiordinaDocumentiServizioRequest;
 import com.martina.caf_fapi.documenti.dto.UpdateDocumentoServizioRequest;
 import com.martina.caf_fapi.documenti.service.DocumentoServizioService;
 import jakarta.validation.Valid;
@@ -51,6 +52,22 @@ public class DocumentoServizioController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PutMapping("/servizi/{servizioId}/documenti/ordine")
+    public ResponseEntity<List<DocumentoServizioResponse>>
+    riordinaDocumenti(
+            @PathVariable Long servizioId,
+            @Valid
+            @RequestBody
+            RiordinaDocumentiServizioRequest request
+    ) {
+        return ResponseEntity.ok(
+                documentoServizioService.riordinaDocumenti(
+                        servizioId,
+                        request
+                )
+        );
     }
 
     @PatchMapping("/documenti-servizio/{documentoId}")

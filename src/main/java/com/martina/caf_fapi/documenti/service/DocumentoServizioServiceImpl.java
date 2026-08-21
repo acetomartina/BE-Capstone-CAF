@@ -2,6 +2,7 @@ package com.martina.caf_fapi.documenti.service;
 
 import com.martina.caf_fapi.documenti.dto.CreateDocumentoServizioRequest;
 import com.martina.caf_fapi.documenti.dto.DocumentoServizioResponse;
+import com.martina.caf_fapi.documenti.dto.RiordinaDocumentiServizioRequest;
 import com.martina.caf_fapi.documenti.dto.UpdateDocumentoServizioRequest;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoServizio;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoServizioRepository;
@@ -11,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -166,5 +169,94 @@ public class DocumentoServizioServiceImpl
                 documento.getTipoObbligatorieta(),
                 documento.getOrdineVisualizzazione()
         );
+    }
+
+    @Override
+    @Transactional
+    public List<DocumentoServizioResponse> riordinaDocumenti(
+            Long servizioId,
+            RiordinaDocumentiServizioRequest request
+    ) {
+        verificaServizioEsistente(servizioId);
+
+        List<Long> documentoIds = request.documentoIds();
+
+        // 1. Verifica che non ci siano ID duplicati
+        Set<Long> idsUnivoci = new HashSet<>(documentoIds);
+
+        if (idsUnivoci.size() != documentoIds.size()) {
+            throw new IllegalArgumentException(
+                    "La lista contiene documenti duplicati"
+            );
+        }
+
+        // 2. Recupera TUTTI i documenti configurati per il servizio
+        List<DocumentoRichiestoServizio> documentiServizio =
+                documentoRepository
+                        .findByServizioIdOrderByOrdineVisualizzazioneAsc(
+                                servizioId
+                        );
+
+        // 3. Il frontend deve inviare l'intera checklist
+        if (documentiServizio.size() != documentoIds.size()) {
+            throw new IllegalArgumentException(
+                    "La lista deve contenere tutti i documenti del servizio"
+            );
+        }
+
+        // 4. Recupera i documenti indicati nella richiesta
+        List<DocumentoRichiestoServizio> documenti =
+                documentoRepository.findAllById(documentoIds);
+
+        // 5. Verifica che tutti gli ID esistano
+        if (documenti.size() != documentoIds.size()) {
+            throw new EntityNotFoundException(
+                    "Uno o più documenti non sono stati trovati"
+            );
+        }
+
+        // 6. Verifica che appartengano tutti al servizio
+        boolean documentoDiAltroServizio =
+                documenti.stream()
+                        .anyMatch(documento ->
+                                !documento.getServizioId()
+                                        .equals(servizioId)
+                        );
+
+        if (documentoDiAltroServizio) {
+            throw new IllegalArgumentException(
+                    "Uno o più documenti non appartengono al servizio indicato"
+            );
+        }
+
+        // 7. Indicizziamo i documenti per ID
+        var documentiPerId = documenti.stream()
+                .collect(
+                        java.util.stream.Collectors.toMap(
+                                DocumentoRichiestoServizio::getId,
+                                documento -> documento
+                        )
+                );
+
+        // 8. La posizione nell'array diventa l'ordine
+        for (int i = 0; i < documentoIds.size(); i++) {
+            Long documentoId = documentoIds.get(i);
+
+            DocumentoRichiestoServizio documento =
+                    documentiPerId.get(documentoId);
+
+            documento.setOrdineVisualizzazione(i + 1);
+        }
+
+        documentoRepository.saveAll(documenti);
+
+        // 9. Restituiamo la checklist nel nuovo ordine
+        return documentoRepository
+                .findByServizioIdOrderByOrdineVisualizzazioneAsc(
+                        servizioId
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

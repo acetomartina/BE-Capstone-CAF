@@ -12,6 +12,7 @@ import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoPraticaReposi
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoServizioRepository;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
 import com.martina.caf_fapi.pratiche.repository.PraticaRepository;
+import com.martina.caf_fapi.pratiche.service.StatoAutomaticoPraticaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,12 +36,14 @@ public class DocumentoPraticaServiceImpl
 
     private final DocumentoPraticaMapper documentoPraticaMapper;
 
+    private final StatoAutomaticoPraticaService
+            statoAutomaticoPraticaService;
+
     @Override
     @Transactional
     public void generaChecklistDaServizio(
             Pratica pratica
     ) {
-
         List<DocumentoRichiestoServizio> documentiStandard =
                 documentoRichiestoServizioRepository
                         .findByServizioIdAndAttivoTrueOrderByOrdineVisualizzazioneAsc(
@@ -74,6 +77,16 @@ public class DocumentoPraticaServiceImpl
 
         documentoRichiestoPraticaRepository
                 .saveAll(checklist);
+
+        /*
+         * Una volta generata la checklist,
+         * rivalutiamo automaticamente lo stato
+         * della pratica.
+         */
+        statoAutomaticoPraticaService
+                .ricalcolaDaDocumenti(
+                        pratica.getId()
+                );
     }
 
     @Override
@@ -107,11 +120,6 @@ public class DocumentoPraticaServiceImpl
         DocumentoRichiestoPratica documento =
                 trovaDocumento(id);
 
-        validaCambioStato(
-                documento,
-                request.stato()
-        );
-
         documento.setStato(
                 request.stato()
         );
@@ -119,6 +127,17 @@ public class DocumentoPraticaServiceImpl
         DocumentoRichiestoPratica salvato =
                 documentoRichiestoPraticaRepository
                         .save(documento);
+
+        /*
+         * Ogni modifica allo stato di un documento
+         * può influenzare lo stato della pratica.
+         */
+        statoAutomaticoPraticaService
+                .ricalcolaDaDocumenti(
+                        documento
+                                .getPratica()
+                                .getId()
+                );
 
         return documentoPraticaMapper.toResponse(
                 salvato
@@ -177,36 +196,61 @@ public class DocumentoPraticaServiceImpl
                 );
 
         /*
-         * Nell'avanzamento entrano soltanto:
+         * Per completamento e percentuale consideriamo
+         * soltanto i documenti che possono realmente
+         * bloccare l'avanzamento della pratica.
          *
-         * - documenti obbligatori;
-         * - documenti condizionali.
-         *
-         * I facoltativi non devono impedire alla
-         * pratica di raggiungere il 100%.
+         * I FACOLTATIVI restano visibili nei contatori
+         * generali ma non incidono sulla percentuale.
          */
-        long totaleRilevante =
+        List<DocumentoRichiestoPratica> documentiRilevanti =
                 documenti.stream()
-                        .filter(this::rilevantePerCompletamento)
+                        .filter(
+                                this::rilevantePerCompletamento
+                        )
+                        .toList();
+
+        long totaleRilevante =
+                documentiRilevanti.size();
+
+        /*
+         * "Completati" indica quanti documenti
+         * sono definitivamente risolti.
+         *
+         * VALIDATO = completato.
+         * NON_APPLICABILE = completato solo
+         * per un documento condizionale.
+         */
+        long completati =
+                documentiRilevanti.stream()
+                        .filter(
+                                this::completato
+                        )
                         .count();
 
         /*
-         * Un documento rilevante è completato quando:
+         * La percentuale rappresenta invece
+         * l'avanzamento operativo.
          *
-         * - è VALIDATO;
-         * - oppure è CONDIZIONALE ed è stato
-         *   esplicitamente dichiarato NON_APPLICABILE.
+         * MANCANTE       ->   0%
+         * RIFIUTATO      ->   0%
+         * RICEVUTO       ->  35%
+         * DA_VERIFICARE  ->  65%
+         * VALIDATO       -> 100%
+         * NON_APPLICABILE-> 100%
          */
-        long completati =
-                documenti.stream()
-                        .filter(this::completato)
-                        .count();
+        double avanzamentoTotale =
+                documentiRilevanti.stream()
+                        .mapToDouble(
+                                this::punteggioAvanzamento
+                        )
+                        .sum();
 
         int percentualeCompletamento =
                 totaleRilevante == 0
                         ? 100
                         : (int) Math.round(
-                        completati
+                        avanzamentoTotale
                         * 100.0
                         / totaleRilevante
                 );
@@ -224,25 +268,17 @@ public class DocumentoPraticaServiceImpl
         );
     }
 
-    private void validaCambioStato(
-            DocumentoRichiestoPratica documento,
-            StatoDocumentoPratica nuovoStato
+    private long contaStato(
+            List<DocumentoRichiestoPratica> documenti,
+            StatoDocumentoPratica stato
     ) {
-        if (
-                nuovoStato
-                        != StatoDocumentoPratica.NON_APPLICABILE
-        ) {
-            return;
-        }
-
-        if (
-                documento.getTipoObbligatorieta()
-                        != TipoObbligatorietaDocumento.CONDIZIONALE
-        ) {
-            throw new IllegalArgumentException(
-                    "Solo un documento condizionale può essere impostato come non applicabile."
-            );
-        }
+        return documenti.stream()
+                .filter(
+                        documento ->
+                                documento.getStato()
+                                        == stato
+                )
+                .count();
     }
 
     private boolean rilevantePerCompletamento(
@@ -259,9 +295,7 @@ public class DocumentoPraticaServiceImpl
                 documento.getStato()
                         == StatoDocumentoPratica.VALIDATO
         ) {
-            return rilevantePerCompletamento(
-                    documento
-            );
+            return true;
         }
 
         return documento.getTipoObbligatorieta()
@@ -271,17 +305,22 @@ public class DocumentoPraticaServiceImpl
                         == StatoDocumentoPratica.NON_APPLICABILE;
     }
 
-    private long contaStato(
-            List<DocumentoRichiestoPratica> documenti,
-            StatoDocumentoPratica stato
+    private double punteggioAvanzamento(
+            DocumentoRichiestoPratica documento
     ) {
-        return documenti.stream()
-                .filter(
-                        documento ->
-                                documento.getStato()
-                                        == stato
-                )
-                .count();
+        return switch (
+                documento.getStato()
+                ) {
+            case MANCANTE,
+                 RIFIUTATO -> 0.0;
+
+            case RICEVUTO -> 0.35;
+
+            case DA_VERIFICARE -> 0.65;
+
+            case VALIDATO,
+                 NON_APPLICABILE -> 1.0;
+        };
     }
 
     private DocumentoRichiestoPratica trovaDocumento(
@@ -289,11 +328,10 @@ public class DocumentoPraticaServiceImpl
     ) {
         return documentoRichiestoPraticaRepository
                 .findById(id)
-                .orElseThrow(
-                        () ->
-                                new EntityNotFoundException(
-                                        "Documento richiesto non trovato"
-                                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Documento richiesto non trovato"
+                        )
                 );
     }
 

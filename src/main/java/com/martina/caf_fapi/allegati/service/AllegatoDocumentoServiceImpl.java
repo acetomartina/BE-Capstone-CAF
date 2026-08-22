@@ -8,6 +8,7 @@ import com.martina.caf_fapi.allegati.storage.FileStorageService;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoPraticaRepository;
+import com.martina.caf_fapi.pratiche.service.StatoAutomaticoPraticaService;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
@@ -32,6 +33,9 @@ public class AllegatoDocumentoServiceImpl
     private final UtenteRepository utenteRepository;
 
     private final FileStorageService fileStorageService;
+
+    private final StatoAutomaticoPraticaService
+            statoAutomaticoPraticaService;
 
     @Override
     @Transactional
@@ -93,6 +97,13 @@ public class AllegatoDocumentoServiceImpl
                     documento,
                     utente
             );
+
+            statoAutomaticoPraticaService
+                    .ricalcolaDaDocumenti(
+                            documento
+                                    .getPratica()
+                                    .getId()
+                    );
 
             return toResponse(
                     salvato
@@ -194,6 +205,13 @@ public class AllegatoDocumentoServiceImpl
                 allegato
         );
 
+        statoAutomaticoPraticaService
+                .ricalcolaDaDocumenti(
+                        documento
+                                .getPratica()
+                                .getId()
+                );
+
 
     }
 
@@ -201,42 +219,25 @@ public class AllegatoDocumentoServiceImpl
             DocumentoRichiestoPratica documento,
             Utente utente
     ) {
-        Ruolo ruolo =
-                utente.getRuolo();
+        StatoDocumentoPratica nuovoStato =
+                switch (utente.getRuolo()) {
 
-        StatoDocumentoPratica statoAttuale =
-                documento.getStato();
+                    case CLIENTE ->
+                            StatoDocumentoPratica.DA_VERIFICARE;
 
-        /*
-         * Se il file viene caricato dal cliente,
-         * il documento deve sempre tornare in stato
-         * DA_VERIFICARE perché c'è nuovo materiale
-         * che un operatore deve controllare.
-         */
-        if (ruolo == Ruolo.CLIENTE) {
-            documento.setStato(
-                    StatoDocumentoPratica.DA_VERIFICARE
-            );
+                    case SUPER_ADMIN,
+                         ADMIN,
+                         USER ->
+                            StatoDocumentoPratica.VALIDATO;
+                };
 
-            return;
-        }
+        documento.setStato(
+                nuovoStato
+        );
 
-        /*
-         * Se il file viene caricato da un operatore,
-         * lo portiamo a RICEVUTO solo se prima era
-         * MANCANTE oppure RIFIUTATO.
-         *
-         * Non retrocediamo documenti già
-         * DA_VERIFICARE o VALIDATI.
-         */
-        if (
-                statoAttuale == StatoDocumentoPratica.MANCANTE ||
-                        statoAttuale == StatoDocumentoPratica.RIFIUTATO
-        ) {
-            documento.setStato(
-                    StatoDocumentoPratica.RICEVUTO
-            );
-        }
+        documentoPraticaRepository.save(
+                documento
+        );
     }
 
     private AllegatoDocumento trovaAllegato(

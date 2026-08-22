@@ -23,4 +23,4 @@ env.properties
 
 # JVM
 hs_err_pid*
-replay_pid*
+replay_pid*uploads/

@@ -14,6 +14,8 @@ public record RiepilogoDocumentiResponse(
 
         long rifiutati,
 
+        long nonApplicabili,
+
         long completati,
 
         int percentualeCompletamento

@@ -6,6 +6,7 @@ import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiResponse;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoServizio;
 import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
+import com.martina.caf_fapi.documenti.enums.TipoObbligatorietaDocumento;
 import com.martina.caf_fapi.documenti.mapper.DocumentoPraticaMapper;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoPraticaRepository;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoServizioRepository;
@@ -106,7 +107,14 @@ public class DocumentoPraticaServiceImpl
         DocumentoRichiestoPratica documento =
                 trovaDocumento(id);
 
-        documento.setStato(request.stato());
+        validaCambioStato(
+                documento,
+                request.stato()
+        );
+
+        documento.setStato(
+                request.stato()
+        );
 
         DocumentoRichiestoPratica salvato =
                 documentoRichiestoPraticaRepository
@@ -123,45 +131,84 @@ public class DocumentoPraticaServiceImpl
     ) {
         verificaPratica(praticaId);
 
-        long totale =
+        List<DocumentoRichiestoPratica> documenti =
                 documentoRichiestoPraticaRepository
-                        .countByPraticaId(praticaId);
+                        .findByPraticaIdOrderByIdAsc(
+                                praticaId
+                        );
 
-        long mancanti = contaStato(
-                praticaId,
-                StatoDocumentoPratica.MANCANTE
-        );
+        long totale =
+                documenti.size();
 
-        long ricevuti = contaStato(
-                praticaId,
-                StatoDocumentoPratica.RICEVUTO
-        );
+        long mancanti =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.MANCANTE
+                );
 
-        long daVerificare = contaStato(
-                praticaId,
-                StatoDocumentoPratica.DA_VERIFICARE
-        );
+        long ricevuti =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.RICEVUTO
+                );
 
-        long validati = contaStato(
-                praticaId,
-                StatoDocumentoPratica.VALIDATO
-        );
+        long daVerificare =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.DA_VERIFICARE
+                );
 
-        long rifiutati = contaStato(
-                praticaId,
-                StatoDocumentoPratica.RIFIUTATO
-        );
+        long validati =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.VALIDATO
+                );
 
+        long rifiutati =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.RIFIUTATO
+                );
+
+        long nonApplicabili =
+                contaStato(
+                        documenti,
+                        StatoDocumentoPratica.NON_APPLICABILE
+                );
+
+        /*
+         * Nell'avanzamento entrano soltanto:
+         *
+         * - documenti obbligatori;
+         * - documenti condizionali.
+         *
+         * I facoltativi non devono impedire alla
+         * pratica di raggiungere il 100%.
+         */
+        long totaleRilevante =
+                documenti.stream()
+                        .filter(this::rilevantePerCompletamento)
+                        .count();
+
+        /*
+         * Un documento rilevante è completato quando:
+         *
+         * - è VALIDATO;
+         * - oppure è CONDIZIONALE ed è stato
+         *   esplicitamente dichiarato NON_APPLICABILE.
+         */
         long completati =
-                ricevuti
-                        + daVerificare
-                        + validati;
+                documenti.stream()
+                        .filter(this::completato)
+                        .count();
 
         int percentualeCompletamento =
-                totale == 0
-                        ? 0
+                totaleRilevante == 0
+                        ? 100
                         : (int) Math.round(
-                        completati * 100.0 / totale
+                        completati
+                        * 100.0
+                        / totaleRilevante
                 );
 
         return new RiepilogoDocumentiResponse(
@@ -171,20 +218,70 @@ public class DocumentoPraticaServiceImpl
                 daVerificare,
                 validati,
                 rifiutati,
+                nonApplicabili,
                 completati,
                 percentualeCompletamento
         );
     }
 
+    private void validaCambioStato(
+            DocumentoRichiestoPratica documento,
+            StatoDocumentoPratica nuovoStato
+    ) {
+        if (
+                nuovoStato
+                        != StatoDocumentoPratica.NON_APPLICABILE
+        ) {
+            return;
+        }
+
+        if (
+                documento.getTipoObbligatorieta()
+                        != TipoObbligatorietaDocumento.CONDIZIONALE
+        ) {
+            throw new IllegalArgumentException(
+                    "Solo un documento condizionale può essere impostato come non applicabile."
+            );
+        }
+    }
+
+    private boolean rilevantePerCompletamento(
+            DocumentoRichiestoPratica documento
+    ) {
+        return documento.getTipoObbligatorieta()
+                != TipoObbligatorietaDocumento.FACOLTATIVO;
+    }
+
+    private boolean completato(
+            DocumentoRichiestoPratica documento
+    ) {
+        if (
+                documento.getStato()
+                        == StatoDocumentoPratica.VALIDATO
+        ) {
+            return rilevantePerCompletamento(
+                    documento
+            );
+        }
+
+        return documento.getTipoObbligatorieta()
+                == TipoObbligatorietaDocumento.CONDIZIONALE
+                &&
+                documento.getStato()
+                        == StatoDocumentoPratica.NON_APPLICABILE;
+    }
+
     private long contaStato(
-            Long praticaId,
+            List<DocumentoRichiestoPratica> documenti,
             StatoDocumentoPratica stato
     ) {
-        return documentoRichiestoPraticaRepository
-                .countByPraticaIdAndStato(
-                        praticaId,
-                        stato
-                );
+        return documenti.stream()
+                .filter(
+                        documento ->
+                                documento.getStato()
+                                        == stato
+                )
+                .count();
     }
 
     private DocumentoRichiestoPratica trovaDocumento(
@@ -192,10 +289,11 @@ public class DocumentoPraticaServiceImpl
     ) {
         return documentoRichiestoPraticaRepository
                 .findById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Documento richiesto non trovato"
-                        )
+                .orElseThrow(
+                        () ->
+                                new EntityNotFoundException(
+                                        "Documento richiesto non trovato"
+                                )
                 );
     }
 
@@ -204,7 +302,9 @@ public class DocumentoPraticaServiceImpl
     ) {
         if (
                 praticaRepository
-                        .findByIdAndEliminatoFalse(praticaId)
+                        .findByIdAndEliminatoFalse(
+                                praticaId
+                        )
                         .isEmpty()
         ) {
             throw new EntityNotFoundException(

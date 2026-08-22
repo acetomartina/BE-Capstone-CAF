@@ -14,4 +14,18 @@ public interface AllegatoDocumentoRepository
     findByDocumentoPraticaIdOrderByCaricatoIlDesc(
             Long documentoPraticaId
     );
+
+    long countByDocumentoPraticaId(
+            Long documentoPraticaId
+    );
+
+    boolean existsByDocumentoPraticaIdAndIdNot(
+            Long documentoPraticaId,
+            Long allegatoId
+    );
+
+    List<AllegatoDocumento>
+    findByDocumentoPraticaPraticaIdOrderByCaricatoIlDesc(
+            Long praticaId
+    );
 }

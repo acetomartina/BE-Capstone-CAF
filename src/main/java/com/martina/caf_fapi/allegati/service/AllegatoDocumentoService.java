@@ -32,4 +32,8 @@ public interface AllegatoDocumentoService {
             String mimeType
     ) {
     }
+
+    List<AllegatoDocumentoResponse> trovaPerPratica(
+            Long praticaId
+    );
 }

@@ -110,4 +110,19 @@ public class AllegatoDocumentoController {
         return ResponseEntity.noContent()
                 .build();
     }
+
+    @GetMapping(
+            "/pratiche/{praticaId}/allegati"
+    )
+    public ResponseEntity<List<AllegatoDocumentoResponse>>
+    trovaPerPratica(
+            @PathVariable Long praticaId
+    ) {
+        return ResponseEntity.ok(
+                allegatoDocumentoService
+                        .trovaPerPratica(
+                                praticaId
+                        )
+        );
+    }
 }

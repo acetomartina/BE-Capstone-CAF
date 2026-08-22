@@ -6,7 +6,9 @@ import com.martina.caf_fapi.allegati.repository.AllegatoDocumentoRepository;
 import com.martina.caf_fapi.allegati.storage.FileSalvato;
 import com.martina.caf_fapi.allegati.storage.FileStorageService;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
+import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoPraticaRepository;
+import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
@@ -87,6 +89,11 @@ public class AllegatoDocumentoServiceImpl
                             allegato
                     );
 
+            aggiornaStatoDocumentoDopoUpload(
+                    documento,
+                    utente
+            );
+
             return toResponse(
                     salvato
             );
@@ -158,6 +165,27 @@ public class AllegatoDocumentoServiceImpl
                         allegatoId
                 );
 
+        DocumentoRichiestoPratica documento =
+                allegato.getDocumentoPratica();
+
+        boolean esistonoAltriAllegati =
+                allegatoRepository
+                        .existsByDocumentoPraticaIdAndIdNot(
+                                documento.getId(),
+                                allegatoId
+                        );
+
+        /*
+         * Se quello che stiamo eliminando
+         * è l'ultimo allegato del documento,
+         * la checklist torna a MANCANTE.
+         */
+        if (!esistonoAltriAllegati) {
+            documento.setStato(
+                    StatoDocumentoPratica.MANCANTE
+            );
+        }
+
         fileStorageService.elimina(
                 allegato.getNomeStorage()
         );
@@ -165,6 +193,50 @@ public class AllegatoDocumentoServiceImpl
         allegatoRepository.delete(
                 allegato
         );
+
+
+    }
+
+    private void aggiornaStatoDocumentoDopoUpload(
+            DocumentoRichiestoPratica documento,
+            Utente utente
+    ) {
+        Ruolo ruolo =
+                utente.getRuolo();
+
+        StatoDocumentoPratica statoAttuale =
+                documento.getStato();
+
+        /*
+         * Se il file viene caricato dal cliente,
+         * il documento deve sempre tornare in stato
+         * DA_VERIFICARE perché c'è nuovo materiale
+         * che un operatore deve controllare.
+         */
+        if (ruolo == Ruolo.CLIENTE) {
+            documento.setStato(
+                    StatoDocumentoPratica.DA_VERIFICARE
+            );
+
+            return;
+        }
+
+        /*
+         * Se il file viene caricato da un operatore,
+         * lo portiamo a RICEVUTO solo se prima era
+         * MANCANTE oppure RIFIUTATO.
+         *
+         * Non retrocediamo documenti già
+         * DA_VERIFICARE o VALIDATI.
+         */
+        if (
+                statoAttuale == StatoDocumentoPratica.MANCANTE ||
+                        statoAttuale == StatoDocumentoPratica.RIFIUTATO
+        ) {
+            documento.setStato(
+                    StatoDocumentoPratica.RICEVUTO
+            );
+        }
     }
 
     private AllegatoDocumento trovaAllegato(
@@ -199,5 +271,19 @@ public class AllegatoDocumentoServiceImpl
                 autore.getCognome(),
                 allegato.getCaricatoIl()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AllegatoDocumentoResponse> trovaPerPratica(
+            Long praticaId
+    ) {
+        return allegatoRepository
+                .findByDocumentoPraticaPraticaIdOrderByCaricatoIlDesc(
+                        praticaId
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

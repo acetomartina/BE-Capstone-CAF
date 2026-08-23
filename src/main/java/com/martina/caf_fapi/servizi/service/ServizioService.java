@@ -24,4 +24,8 @@ public interface ServizioService {
             Long id,
             UpdateServizioRequest request
     );
+
+    ServizioResponse trovaServizioPerSlug(
+            String slug
+    );
 }

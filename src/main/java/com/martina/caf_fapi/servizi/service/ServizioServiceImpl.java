@@ -7,7 +7,7 @@ import com.martina.caf_fapi.servizi.entity.MacroArea;
 import com.martina.caf_fapi.servizi.entity.Servizio;
 import com.martina.caf_fapi.servizi.repository.MacroAreaRepository;
 import com.martina.caf_fapi.servizi.repository.ServizioRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public class ServizioServiceImpl
         Servizio servizio = servizioRepository
                 .findById(id)
                 .orElseThrow(() ->
-                        new EntityNotFoundException(
+                        new ResourceNotFoundException(
                                 "Servizio non trovato"
                         )
                 );
@@ -174,7 +174,7 @@ public class ServizioServiceImpl
         macroAreaRepository
                 .findByIdAndAttivaTrue(macroAreaId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException(
+                        new ResourceNotFoundException(
                                 "Macro-area non trovata"
                         )
                 );
@@ -195,7 +195,7 @@ public class ServizioServiceImpl
         Servizio servizio = servizioRepository
                 .findByIdAndAttivoTrue(id)
                 .orElseThrow(() ->
-                        new EntityNotFoundException(
+                        new ResourceNotFoundException(
                                 "Servizio non trovato"
                         )
                 );
@@ -244,6 +244,26 @@ public class ServizioServiceImpl
                 servizio.getOrdineVisualizzazione(),
                 servizio.isAttivo(),
                 servizio.getValidoFinoAl()
+        );
+    }
+
+    @Override
+    public ServizioResponse trovaServizioPerSlug(
+            String slug
+    ) {
+        Servizio servizio =
+                servizioRepository
+                        .findBySlugAndAttivoTrue(
+                                slug
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Servizio non trovato"
+                                )
+                        );
+
+        return toServizioResponse(
+                servizio
         );
     }
 }

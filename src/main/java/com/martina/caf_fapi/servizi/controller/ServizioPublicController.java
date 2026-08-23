@@ -45,4 +45,16 @@ public class ServizioPublicController {
                 )
         );
     }
+
+    @GetMapping("/servizi/{slug}")
+    public ResponseEntity<ServizioResponse>
+    trovaServizioPerSlug(
+            @PathVariable String slug
+    ) {
+        return ResponseEntity.ok(
+                servizioService.trovaServizioPerSlug(
+                        slug
+                )
+        );
+    }
 }

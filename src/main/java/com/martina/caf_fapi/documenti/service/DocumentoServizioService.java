@@ -31,4 +31,8 @@ public interface DocumentoServizioService {
     void disattivaDocumento(
             Long documentoId
     );
+
+    List<DocumentoServizioResponse> trovaDocumentiPubbliciPerServizio(
+            Long servizioId
+    );
 }

@@ -17,4 +17,9 @@ public interface DocumentoRichiestoServizioRepository
     findByServizioIdAndAttivoTrueOrderByOrdineVisualizzazioneAsc(
             Long servizioId
     );
+
+    List<DocumentoRichiestoServizio>
+    findByServizioIdAndAttivoTrueAndVisibileAlClienteTrueOrderByOrdineVisualizzazioneAsc(
+            Long servizioId
+    );
 }

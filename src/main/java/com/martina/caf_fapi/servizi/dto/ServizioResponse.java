@@ -19,6 +19,10 @@ public record ServizioResponse(
 
         String descrizioneBreve,
 
+        String cosE,
+
+        String aCosaServe,
+
         String descrizione,
 
         String destinatari,

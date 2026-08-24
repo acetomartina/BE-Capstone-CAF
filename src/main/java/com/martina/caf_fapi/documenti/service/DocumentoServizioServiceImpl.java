@@ -259,4 +259,20 @@ public class DocumentoServizioServiceImpl
                 .map(this::toResponse)
                 .toList();
     }
+
+    @Override
+    public List<DocumentoServizioResponse>
+    trovaDocumentiPubbliciPerServizio(
+            Long servizioId
+    ) {
+        verificaServizioEsistente(servizioId);
+
+        return documentoRepository
+                .findByServizioIdAndAttivoTrueAndVisibileAlClienteTrueOrderByOrdineVisualizzazioneAsc(
+                        servizioId
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 }

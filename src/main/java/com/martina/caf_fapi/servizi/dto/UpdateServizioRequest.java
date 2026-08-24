@@ -15,6 +15,10 @@ public record UpdateServizioRequest(
         @Size(max = 255)
         String descrizioneBreve,
 
+        String cosE,
+
+        String aCosaServe,
+
         String descrizione,
 
         String destinatari,

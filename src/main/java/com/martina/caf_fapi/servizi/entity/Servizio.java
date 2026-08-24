@@ -65,6 +65,18 @@ public class Servizio {
     )
     private String descrizioneBreve;
 
+    @Column(
+            name = "cos_e",
+            columnDefinition = "TEXT"
+    )
+    private String cosE;
+
+    @Column(
+            name = "a_cosa_serve",
+            columnDefinition = "TEXT"
+    )
+    private String aCosaServe;
+
     @Column(columnDefinition = "TEXT")
     private String descrizione;
 

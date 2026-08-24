@@ -47,6 +47,18 @@ public class ServizioServiceImpl
             );
         }
 
+        if (request.cosE() != null) {
+            servizio.setCosE(
+                    request.cosE()
+            );
+        }
+
+        if (request.aCosaServe() != null) {
+            servizio.setACosaServe(
+                    request.aCosaServe()
+            );
+        }
+
         if (request.descrizione() != null) {
             servizio.setDescrizione(
                     request.descrizione()
@@ -228,6 +240,8 @@ public class ServizioServiceImpl
                 servizio.getNome(),
                 servizio.getSlug(),
                 servizio.getDescrizioneBreve(),
+                servizio.getCosE(),
+                servizio.getACosaServe(),
                 servizio.getDescrizione(),
                 servizio.getDestinatari(),
                 servizio.getRequisiti(),

@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.documenti.mapper;
 
+import com.martina.caf_fapi.documenti.dto.DocumentoAdminResponse;
 import com.martina.caf_fapi.documenti.dto.DocumentoPraticaResponse;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.pratiche.dto.UtentePraticaResponse;
@@ -21,6 +22,39 @@ public class DocumentoPraticaMapper {
                 documento.getTipoObbligatorieta(),
                 documento.getStato(),
                 toUtenteResponse(documento.getRichiestoDa()),
+                documento.getCreatoIl(),
+                documento.getAggiornatoIl()
+        );
+    }
+
+    public DocumentoAdminResponse toAdminResponse(
+            DocumentoRichiestoPratica documento
+    ) {
+        var pratica = documento.getPratica();
+        var cliente = pratica.getCliente();
+        var servizio = pratica.getServizio();
+
+        return new DocumentoAdminResponse(
+                documento.getId(),
+
+                pratica.getId(),
+                pratica.getNumeroPratica(),
+                pratica.getOggetto(),
+                pratica.getDataScadenza(),
+
+                cliente.getId(),
+                cliente.getNome(),
+                cliente.getCognome(),
+                cliente.getCodiceFiscale(),
+
+                servizio.getId(),
+                servizio.getNome(),
+
+                documento.getEtichetta(),
+                documento.getSuggerimento(),
+                documento.getTipoObbligatorieta(),
+                documento.getStato(),
+
                 documento.getCreatoIl(),
                 documento.getAggiornatoIl()
         );

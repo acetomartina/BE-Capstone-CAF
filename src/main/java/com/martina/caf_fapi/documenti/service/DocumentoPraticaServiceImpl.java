@@ -1,7 +1,9 @@
 package com.martina.caf_fapi.documenti.service;
 
 import com.martina.caf_fapi.documenti.dto.CambiaStatoDocumentoRequest;
+import com.martina.caf_fapi.documenti.dto.DocumentoAdminResponse;
 import com.martina.caf_fapi.documenti.dto.DocumentoPraticaResponse;
+import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiAdminResponse;
 import com.martina.caf_fapi.documenti.dto.RiepilogoDocumentiResponse;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoServizio;
@@ -13,12 +15,17 @@ import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoServizioRepos
 import com.martina.caf_fapi.pratiche.entity.Pratica;
 import com.martina.caf_fapi.pratiche.repository.PraticaRepository;
 import com.martina.caf_fapi.pratiche.service.StatoAutomaticoPraticaService;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +41,8 @@ public class DocumentoPraticaServiceImpl
 
     private final PraticaRepository praticaRepository;
 
-    private final DocumentoPraticaMapper documentoPraticaMapper;
+    private final DocumentoPraticaMapper
+            documentoPraticaMapper;
 
     private final StatoAutomaticoPraticaService
             statoAutomaticoPraticaService;
@@ -78,15 +86,79 @@ public class DocumentoPraticaServiceImpl
         documentoRichiestoPraticaRepository
                 .saveAll(checklist);
 
-        /*
-         * Una volta generata la checklist,
-         * rivalutiamo automaticamente lo stato
-         * della pratica.
-         */
         statoAutomaticoPraticaService
                 .ricalcolaDaDocumenti(
                         pratica.getId()
                 );
+    }
+
+    @Override
+    public Page<DocumentoAdminResponse> trovaTutti(
+            String termine,
+            StatoDocumentoPratica stato,
+            TipoObbligatorietaDocumento tipoObbligatorieta,
+            Pageable pageable
+    ) {
+        String termineNormalizzato =
+                termine == null
+                        ? ""
+                        : termine
+                        .trim()
+                        .toLowerCase(
+                                Locale.ROOT
+                        );
+
+        return documentoRichiestoPraticaRepository
+                .cercaPerAmministrazione(
+                        termineNormalizzato,
+                        stato,
+                        tipoObbligatorieta,
+                        pageable
+                )
+                .map(
+                        documentoPraticaMapper::toAdminResponse
+                );
+    }
+
+    @Override
+    public RiepilogoDocumentiAdminResponse riepilogoAdmin() {
+        long totale =
+                documentoRichiestoPraticaRepository
+                        .countByPraticaEliminatoFalse();
+
+        long mancanti = contaDocumentiAdmin(
+                StatoDocumentoPratica.MANCANTE
+        );
+
+        long ricevuti = contaDocumentiAdmin(
+                StatoDocumentoPratica.RICEVUTO
+        );
+
+        long daVerificare = contaDocumentiAdmin(
+                StatoDocumentoPratica.DA_VERIFICARE
+        );
+
+        long validati = contaDocumentiAdmin(
+                StatoDocumentoPratica.VALIDATO
+        );
+
+        long rifiutati = contaDocumentiAdmin(
+                StatoDocumentoPratica.RIFIUTATO
+        );
+
+        long nonApplicabili = contaDocumentiAdmin(
+                StatoDocumentoPratica.NON_APPLICABILE
+        );
+
+        return new RiepilogoDocumentiAdminResponse(
+                totale,
+                mancanti,
+                ricevuti,
+                daVerificare,
+                validati,
+                rifiutati,
+                nonApplicabili
+        );
     }
 
     @Override
@@ -128,10 +200,6 @@ public class DocumentoPraticaServiceImpl
                 documentoRichiestoPraticaRepository
                         .save(documento);
 
-        /*
-         * Ogni modifica allo stato di un documento
-         * può influenzare lo stato della pratica.
-         */
         statoAutomaticoPraticaService
                 .ricalcolaDaDocumenti(
                         documento
@@ -156,53 +224,38 @@ public class DocumentoPraticaServiceImpl
                                 praticaId
                         );
 
-        long totale =
-                documenti.size();
+        long totale = documenti.size();
 
-        long mancanti =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.MANCANTE
-                );
+        long mancanti = contaStato(
+                documenti,
+                StatoDocumentoPratica.MANCANTE
+        );
 
-        long ricevuti =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.RICEVUTO
-                );
+        long ricevuti = contaStato(
+                documenti,
+                StatoDocumentoPratica.RICEVUTO
+        );
 
-        long daVerificare =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.DA_VERIFICARE
-                );
+        long daVerificare = contaStato(
+                documenti,
+                StatoDocumentoPratica.DA_VERIFICARE
+        );
 
-        long validati =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.VALIDATO
-                );
+        long validati = contaStato(
+                documenti,
+                StatoDocumentoPratica.VALIDATO
+        );
 
-        long rifiutati =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.RIFIUTATO
-                );
+        long rifiutati = contaStato(
+                documenti,
+                StatoDocumentoPratica.RIFIUTATO
+        );
 
-        long nonApplicabili =
-                contaStato(
-                        documenti,
-                        StatoDocumentoPratica.NON_APPLICABILE
-                );
+        long nonApplicabili = contaStato(
+                documenti,
+                StatoDocumentoPratica.NON_APPLICABILE
+        );
 
-        /*
-         * Per completamento e percentuale consideriamo
-         * soltanto i documenti che possono realmente
-         * bloccare l'avanzamento della pratica.
-         *
-         * I FACOLTATIVI restano visibili nei contatori
-         * generali ma non incidono sulla percentuale.
-         */
         List<DocumentoRichiestoPratica> documentiRilevanti =
                 documenti.stream()
                         .filter(
@@ -213,14 +266,6 @@ public class DocumentoPraticaServiceImpl
         long totaleRilevante =
                 documentiRilevanti.size();
 
-        /*
-         * "Completati" indica quanti documenti
-         * sono definitivamente risolti.
-         *
-         * VALIDATO = completato.
-         * NON_APPLICABILE = completato solo
-         * per un documento condizionale.
-         */
         long completati =
                 documentiRilevanti.stream()
                         .filter(
@@ -228,17 +273,6 @@ public class DocumentoPraticaServiceImpl
                         )
                         .count();
 
-        /*
-         * La percentuale rappresenta invece
-         * l'avanzamento operativo.
-         *
-         * MANCANTE       ->   0%
-         * RIFIUTATO      ->   0%
-         * RICEVUTO       ->  35%
-         * DA_VERIFICARE  ->  65%
-         * VALIDATO       -> 100%
-         * NON_APPLICABILE-> 100%
-         */
         double avanzamentoTotale =
                 documentiRilevanti.stream()
                         .mapToDouble(
@@ -268,6 +302,15 @@ public class DocumentoPraticaServiceImpl
         );
     }
 
+    private long contaDocumentiAdmin(
+            StatoDocumentoPratica stato
+    ) {
+        return documentoRichiestoPraticaRepository
+                .countByStatoAndPraticaEliminatoFalse(
+                        stato
+                );
+    }
+
     private long contaStato(
             List<DocumentoRichiestoPratica> documenti,
             StatoDocumentoPratica stato
@@ -275,8 +318,7 @@ public class DocumentoPraticaServiceImpl
         return documenti.stream()
                 .filter(
                         documento ->
-                                documento.getStato()
-                                        == stato
+                                documento.getStato() == stato
                 )
                 .count();
     }
@@ -308,9 +350,7 @@ public class DocumentoPraticaServiceImpl
     private double punteggioAvanzamento(
             DocumentoRichiestoPratica documento
     ) {
-        return switch (
-                documento.getStato()
-                ) {
+        return switch (documento.getStato()) {
             case MANCANTE,
                  RIFIUTATO -> 0.0;
 

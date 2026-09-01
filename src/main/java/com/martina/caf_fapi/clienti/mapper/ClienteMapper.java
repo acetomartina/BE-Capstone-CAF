@@ -15,12 +15,22 @@ public class ClienteMapper {
                 utente.getCodiceFiscale(),
                 utente.getDataNascita(),
                 utente.getLuogoNascita(),
+
                 utente.getEmail(),
                 utente.getTelefono(),
+                utente.getTelefonoSecondario(),
+
                 utente.getIndirizzo(),
                 utente.getComune(),
                 utente.getProvincia(),
                 utente.getCap(),
+
+                utente.isDomicilioDiversoDallaResidenza(),
+                utente.getDomicilioIndirizzo(),
+                utente.getDomicilioComune(),
+                utente.getDomicilioProvincia(),
+                utente.getDomicilioCap(),
+
                 utente.isAttivo(),
                 utente.isEmailVerificata(),
                 utente.getUrlImmagineProfilo(),

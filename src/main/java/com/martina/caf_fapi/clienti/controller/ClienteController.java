@@ -38,6 +38,21 @@ public class ClienteController {
         );
     }
 
+    @GetMapping("/ricerca")
+    public ResponseEntity<Page<ClienteResponse>> cerca(
+            @RequestParam String termine,
+            @RequestParam(required = false) Boolean attivo,
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                clienteService.cerca(
+                        termine,
+                        attivo,
+                        pageable
+                )
+        );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ClienteResponse> trovaPerId(
             @PathVariable Long id
@@ -111,6 +126,15 @@ public class ClienteController {
         return ResponseEntity.ok(
                 clienteService.ripristinaCliente(id)
         );
+    }
+
+    @PostMapping("/{id}/reinvia-attivazione")
+    public ResponseEntity<Void> reinviaAttivazione(
+            @PathVariable Long id
+    ) {
+        clienteService.reinviaAttivazione(id);
+
+        return ResponseEntity.noContent().build();
     }
 
     

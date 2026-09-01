@@ -23,6 +23,11 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
     boolean existsByRuolo(Ruolo ruolo);
 
+    boolean existsByCodiceFiscaleIgnoreCaseAndIdNot(
+            String codiceFiscale,
+            Long id
+    );
+
     Optional<Utente> findByEmailIgnoreCase(String email);
 
     Page<Utente> findByRuolo(
@@ -87,6 +92,45 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     Page<Utente> findByRuoloAndEliminatoFalseAndAttivo(
             Ruolo ruolo,
             boolean attivo,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                SELECT u
+                FROM Utente u
+                WHERE u.ruolo = :ruolo
+                  AND u.eliminato = false
+                  AND (:attivo IS NULL OR u.attivo = :attivo)
+                  AND (
+                      LOWER(u.nome) LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(u.cognome) LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(CONCAT(u.nome, ' ', u.cognome))
+                          LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(u.codiceFiscale)
+                          LIKE LOWER(CONCAT('%', :termine, '%'))
+                  )
+                """,
+            countQuery = """
+                SELECT COUNT(u)
+                FROM Utente u
+                WHERE u.ruolo = :ruolo
+                  AND u.eliminato = false
+                  AND (:attivo IS NULL OR u.attivo = :attivo)
+                  AND (
+                      LOWER(u.nome) LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(u.cognome) LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(CONCAT(u.nome, ' ', u.cognome))
+                          LIKE LOWER(CONCAT('%', :termine, '%'))
+                      OR LOWER(u.codiceFiscale)
+                          LIKE LOWER(CONCAT('%', :termine, '%'))
+                  )
+                """
+    )
+    Page<Utente> cercaClienti(
+            @Param("ruolo") Ruolo ruolo,
+            @Param("termine") String termine,
+            @Param("attivo") Boolean attivo,
             Pageable pageable
     );
 }

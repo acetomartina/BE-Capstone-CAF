@@ -32,8 +32,16 @@ public interface ClienteService {
             Pageable pageable
     );
 
+    Page<ClienteResponse> cerca(
+            String termine,
+            Boolean attivo,
+            Pageable pageable
+    );
+
     void eliminaCliente(Long id);
 
     ClienteResponse ripristinaCliente(Long id);
+
+    void reinviaAttivazione(Long id);
 
 }

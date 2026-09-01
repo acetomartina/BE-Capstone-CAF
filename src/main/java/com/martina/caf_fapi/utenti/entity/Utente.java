@@ -58,6 +58,9 @@ public class Utente extends BaseEntity {
     @Column(length = 20)
     private String telefono;
 
+    @Column(name = "telefono_secondario", length = 20)
+    private String telefonoSecondario;
+
     // Indirizzo
     @Column(length = 150)
     private String indirizzo;
@@ -70,6 +73,27 @@ public class Utente extends BaseEntity {
 
     @Column(length = 5)
     private String cap;
+
+    // Domicilio
+
+    @Column(
+            name = "domicilio_diverso_dalla_residenza",
+            nullable = false
+    )
+    @Builder.Default
+    private boolean domicilioDiversoDallaResidenza = false;
+
+    @Column(name = "domicilio_indirizzo", length = 150)
+    private String domicilioIndirizzo;
+
+    @Column(name = "domicilio_comune", length = 100)
+    private String domicilioComune;
+
+    @Column(name = "domicilio_provincia", length = 2)
+    private String domicilioProvincia;
+
+    @Column(name = "domicilio_cap", length = 5)
+    private String domicilioCap;
 
     // Autenticazione e autorizzazione
     @Column(nullable = false)

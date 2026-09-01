@@ -5,6 +5,7 @@ import com.martina.caf_fapi.clienti.dto.AggiornaClienteRequest;
 import com.martina.caf_fapi.clienti.dto.ClienteResponse;
 import com.martina.caf_fapi.clienti.dto.CreaClienteRequest;
 import com.martina.caf_fapi.clienti.mapper.ClienteMapper;
+import com.martina.caf_fapi.exception.InvalidDataException;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.utenti.dto.CreaUtenteRequest;
 import com.martina.caf_fapi.utenti.dto.UtenteResponse;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Locale;
 
 
 @Service
@@ -90,6 +92,23 @@ public class ClienteServiceImpl implements ClienteService {
         return clienti.map(
                 clienteMapper::toResponse
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ClienteResponse> cerca(
+            String termine,
+            Boolean attivo,
+            Pageable pageable
+    ) {
+        return utenteRepository
+                .cercaClienti(
+                        Ruolo.CLIENTE,
+                        termine.trim(),
+                        attivo,
+                        pageable
+                )
+                .map(clienteMapper::toResponse);
     }
 
     @Override
@@ -207,31 +226,48 @@ public class ClienteServiceImpl implements ClienteService {
             Long id,
             AggiornaClienteRequest request
     ) {
+        Utente cliente = trovaClientePerId(id);
 
-        trovaClientePerId(id);
+        String codiceFiscale =
+                request.codiceFiscale()
+                        .trim()
+                        .toUpperCase(Locale.ROOT);
+
+        boolean codiceFiscaleModificato =
+                !cliente.getCodiceFiscale()
+                        .equalsIgnoreCase(codiceFiscale);
+
+        if (
+                codiceFiscaleModificato
+                        && utenteRepository
+                        .existsByCodiceFiscaleIgnoreCaseAndIdNot(
+                                codiceFiscale,
+                                id
+                        )
+        ) {
+            throw new InvalidDataException(
+                    "Esiste già un cliente con questo codice fiscale."
+            );
+        }
+
+        validaDomicilioCliente(request);
 
         UtenteUpdateRequest utenteUpdateRequest =
                 UtenteUpdateRequest.builder()
                         .nome(request.nome())
                         .cognome(request.cognome())
-                        .dataNascita(
-                                request.dataNascita()
-                        )
-                        .luogoNascita(
-                                request.luogoNascita()
-                        )
+                        .dataNascita(request.dataNascita())
+                        .luogoNascita(request.luogoNascita())
                         .email(request.email())
                         .telefono(request.telefono())
-                        .indirizzo(
-                                request.indirizzo()
-                        )
+                        .indirizzo(request.indirizzo())
                         .comune(request.comune())
-                        .provincia(
-                                request.provincia()
-                        )
+                        .provincia(request.provincia())
                         .cap(request.cap())
                         .mansione(null)
-                        .urlImmagineProfilo(null)
+                        .urlImmagineProfilo(
+                                cliente.getUrlImmagineProfilo()
+                        )
                         .build();
 
         utenteService.aggiornaUtente(
@@ -239,9 +275,59 @@ public class ClienteServiceImpl implements ClienteService {
                 utenteUpdateRequest
         );
 
-        return trovaPerId(id);
-    }
+        Utente clienteAggiornato =
+                trovaClientePerId(id);
 
+        clienteAggiornato.setCodiceFiscale(
+                codiceFiscale
+        );
+
+        clienteAggiornato.setTelefonoSecondario(
+                normalizzaCampoCliente(
+                        request.telefonoSecondario()
+                )
+        );
+
+        clienteAggiornato.setDomicilioDiversoDallaResidenza(
+                request.domicilioDiversoDallaResidenza()
+        );
+
+        if (request.domicilioDiversoDallaResidenza()) {
+            clienteAggiornato.setDomicilioIndirizzo(
+                    normalizzaCampoCliente(
+                            request.domicilioIndirizzo()
+                    )
+            );
+
+            clienteAggiornato.setDomicilioComune(
+                    normalizzaCampoCliente(
+                            request.domicilioComune()
+                    )
+            );
+
+            clienteAggiornato.setDomicilioProvincia(
+                    request.domicilioProvincia()
+                            .trim()
+                            .toUpperCase(Locale.ROOT)
+            );
+
+            clienteAggiornato.setDomicilioCap(
+                    request.domicilioCap().trim()
+            );
+        } else {
+            clienteAggiornato.setDomicilioIndirizzo(null);
+            clienteAggiornato.setDomicilioComune(null);
+            clienteAggiornato.setDomicilioProvincia(null);
+            clienteAggiornato.setDomicilioCap(null);
+        }
+
+        Utente salvato =
+                utenteRepository.save(
+                        clienteAggiornato
+                );
+
+        return clienteMapper.toResponse(salvato);
+    }
 
     @Override
     @Transactional
@@ -351,5 +437,57 @@ public class ClienteServiceImpl implements ClienteService {
                 .withoutPadding()
                 .encodeToString(casuali)
                 + "aA1!";
+    }
+
+    private void validaDomicilioCliente(
+            AggiornaClienteRequest request
+    ) {
+        if (!request.domicilioDiversoDallaResidenza()) {
+            return;
+        }
+
+        if (
+                campoVuotoCliente(request.domicilioIndirizzo())
+                        || campoVuotoCliente(request.domicilioComune())
+                        || campoVuotoCliente(request.domicilioProvincia())
+                        || campoVuotoCliente(request.domicilioCap())
+        ) {
+            throw new InvalidDataException(
+                    "Compila tutti i dati del domicilio."
+            );
+        }
+    }
+
+    private boolean campoVuotoCliente(
+            String valore
+    ) {
+        return valore == null || valore.isBlank();
+    }
+
+    private String normalizzaCampoCliente(
+            String valore
+    ) {
+        if (valore == null) {
+            return null;
+        }
+
+        String normalizzato = valore.trim();
+
+        return normalizzato.isEmpty()
+                ? null
+                : normalizzato;
+    }
+
+    @Override
+    @Transactional
+    public void reinviaAttivazione(
+            Long id
+    ) {
+        Utente cliente =
+                trovaClientePerId(id);
+
+        accountActivationService.inviaInvito(
+                cliente
+        );
     }
 }

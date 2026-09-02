@@ -15,10 +15,6 @@ public interface AllegatoDocumentoRepository
             Long documentoPraticaId
     );
 
-    long countByDocumentoPraticaId(
-            Long documentoPraticaId
-    );
-
     boolean existsByDocumentoPraticaIdAndIdNot(
             Long documentoPraticaId,
             Long allegatoId

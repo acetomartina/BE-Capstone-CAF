@@ -27,6 +27,11 @@ public interface PraticaService {
             Pageable pageable
     );
 
+    PraticaResponse trovaPerIdDelCliente(
+            Long praticaId,
+            Long clienteId
+    );
+
     PraticaResponse trovaPerId(
             Long id
     );

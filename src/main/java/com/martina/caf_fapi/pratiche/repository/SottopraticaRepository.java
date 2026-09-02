@@ -16,9 +16,4 @@ public interface SottopraticaRepository
     );
 
     Optional<Sottopratica> findByIdAndEliminatoFalse(Long id);
-
-    Page<Sottopratica> findByOperatoreAssegnatoIdAndEliminatoFalse(
-            Long operatoreId,
-            Pageable pageable
-    );
 }

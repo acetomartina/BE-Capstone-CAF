@@ -50,4 +50,41 @@ public interface AppuntamentoRepository
     findByIdAndEliminatoFalse(
             Long id
     );
+
+    /**
+     * Appuntamenti gia' fissati che occupano lo stesso operatore nella
+     * stessa fascia oraria.
+     *
+     * Due intervalli si sovrappongono quando ciascuno inizia prima che
+     * l'altro finisca; il confronto stretto lascia quindi passare un
+     * appuntamento che comincia esattamente quando il precedente termina.
+     *
+     * Gli annullati non contano: liberano l'agenda. L'id da escludere
+     * serve in aggiornamento, perche' un appuntamento non si sovrappone
+     * a se stesso.
+     */
+    @Query("""
+            SELECT appuntamento
+            FROM Appuntamento appuntamento
+            WHERE appuntamento.eliminato = false
+              AND appuntamento.responsabile.id = :responsabileId
+              AND appuntamento.stato <> com.martina.caf_fapi.appuntamenti.enums.StatoAppuntamento.ANNULLATO
+              AND appuntamento.inizio < :fine
+              AND appuntamento.fine > :inizio
+              AND (:idDaEscludere IS NULL OR appuntamento.id <> :idDaEscludere)
+            ORDER BY appuntamento.inizio ASC
+            """)
+    List<Appuntamento> trovaSovrapposti(
+            @Param("responsabileId")
+            Long responsabileId,
+
+            @Param("inizio")
+            LocalDateTime inizio,
+
+            @Param("fine")
+            LocalDateTime fine,
+
+            @Param("idDaEscludere")
+            Long idDaEscludere
+    );
 }

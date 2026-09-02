@@ -5,11 +5,15 @@ import com.martina.caf_fapi.allegati.entity.AllegatoDocumento;
 import com.martina.caf_fapi.allegati.repository.AllegatoDocumentoRepository;
 import com.martina.caf_fapi.allegati.storage.FileSalvato;
 import com.martina.caf_fapi.allegati.storage.FileStorageService;
+import com.martina.caf_fapi.auth.security.UtenteDetails;
 import com.martina.caf_fapi.documenti.entity.DocumentoRichiestoPratica;
 import com.martina.caf_fapi.documenti.enums.StatoDocumentoPratica;
 import com.martina.caf_fapi.documenti.repository.DocumentoRichiestoPraticaRepository;
+import com.martina.caf_fapi.exception.OperationNotAllowedException;
+import com.martina.caf_fapi.exception.ResourceNotFoundException;
+import com.martina.caf_fapi.pratiche.entity.Pratica;
+import com.martina.caf_fapi.pratiche.repository.PraticaRepository;
 import com.martina.caf_fapi.pratiche.service.StatoAutomaticoPraticaService;
-import com.martina.caf_fapi.utenti.entity.Ruolo;
 import com.martina.caf_fapi.utenti.entity.Utente;
 import com.martina.caf_fapi.utenti.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +29,26 @@ import java.util.List;
 public class AllegatoDocumentoServiceImpl
         implements AllegatoDocumentoService {
 
+    /*
+     * Un solo messaggio per "non esiste" e "non e' tuo": distinguerli
+     * permetterebbe a un cliente di scoprire quali id esistono
+     * enumerando le risposte.
+     */
+    private static final String ALLEGATO_NON_ACCESSIBILE =
+            "Allegato non trovato.";
+
+    private static final String DOCUMENTO_NON_ACCESSIBILE =
+            "Documento richiesto non trovato.";
+
+    private static final String PRATICA_NON_ACCESSIBILE =
+            "Pratica non trovata.";
+
     private final AllegatoDocumentoRepository allegatoRepository;
 
     private final DocumentoRichiestoPraticaRepository
             documentoPraticaRepository;
+
+    private final PraticaRepository praticaRepository;
 
     private final UtenteRepository utenteRepository;
 
@@ -42,24 +62,22 @@ public class AllegatoDocumentoServiceImpl
     public AllegatoDocumentoResponse carica(
             Long documentoPraticaId,
             MultipartFile file,
-            Long utenteId
+            UtenteDetails utenteAutenticato
     ) {
         DocumentoRichiestoPratica documento =
-                documentoPraticaRepository
-                        .findById(documentoPraticaId)
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "Documento richiesto non trovato."
-                                        )
-                        );
+                trovaDocumentoAccessibile(
+                        documentoPraticaId,
+                        utenteAutenticato
+                );
 
         Utente utente =
                 utenteRepository
-                        .findById(utenteId)
+                        .findById(
+                                utenteAutenticato.getId()
+                        )
                         .orElseThrow(
                                 () ->
-                                        new IllegalArgumentException(
+                                        new ResourceNotFoundException(
                                                 "Utente non trovato."
                                         )
                         );
@@ -122,18 +140,13 @@ public class AllegatoDocumentoServiceImpl
     @Transactional(readOnly = true)
     public List<AllegatoDocumentoResponse>
     trovaPerDocumento(
-            Long documentoPraticaId
+            Long documentoPraticaId,
+            UtenteDetails utenteAutenticato
     ) {
-        if (
-                !documentoPraticaRepository
-                        .existsById(
-                                documentoPraticaId
-                        )
-        ) {
-            throw new IllegalArgumentException(
-                    "Documento richiesto non trovato."
-            );
-        }
+        trovaDocumentoAccessibile(
+                documentoPraticaId,
+                utenteAutenticato
+        );
 
         return allegatoRepository
                 .findByDocumentoPraticaIdOrderByCaricatoIlDesc(
@@ -147,11 +160,13 @@ public class AllegatoDocumentoServiceImpl
     @Override
     @Transactional(readOnly = true)
     public DownloadAllegato scarica(
-            Long allegatoId
+            Long allegatoId,
+            UtenteDetails utenteAutenticato
     ) {
         AllegatoDocumento allegato =
-                trovaAllegato(
-                        allegatoId
+                trovaAllegatoAccessibile(
+                        allegatoId,
+                        utenteAutenticato
                 );
 
         Resource resource =
@@ -169,15 +184,23 @@ public class AllegatoDocumentoServiceImpl
     @Override
     @Transactional
     public void elimina(
-            Long allegatoId
+            Long allegatoId,
+            UtenteDetails utenteAutenticato
     ) {
         AllegatoDocumento allegato =
-                trovaAllegato(
-                        allegatoId
+                trovaAllegatoAccessibile(
+                        allegatoId,
+                        utenteAutenticato
                 );
 
         DocumentoRichiestoPratica documento =
                 allegato.getDocumentoPratica();
+
+        verificaCancellazioneConsentita(
+                allegato,
+                documento,
+                utenteAutenticato
+        );
 
         boolean esistonoAltriAllegati =
                 allegatoRepository
@@ -211,8 +234,160 @@ public class AllegatoDocumentoServiceImpl
                                 .getPratica()
                                 .getId()
                 );
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AllegatoDocumentoResponse> trovaPerPratica(
+            Long praticaId,
+            UtenteDetails utenteAutenticato
+    ) {
+        Pratica pratica =
+                praticaRepository
+                        .findByIdAndEliminatoFalse(
+                                praticaId
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new ResourceNotFoundException(
+                                                PRATICA_NON_ACCESSIBILE
+                                        )
+                        );
 
+        verificaAccessoAPratica(
+                pratica,
+                utenteAutenticato,
+                PRATICA_NON_ACCESSIBILE
+        );
+
+        return allegatoRepository
+                .findByDocumentoPraticaPraticaIdOrderByCaricatoIlDesc(
+                        praticaId
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /*
+     * ------------------------------------------------------------------
+     * Controlli di accesso
+     * ------------------------------------------------------------------
+     *
+     * Gli allegati contengono documenti fiscali e di identita': senza
+     * questi controlli qualunque utente autenticato potrebbe leggere
+     * quelli di chiunque altro semplicemente indovinando un id.
+     */
+
+    private DocumentoRichiestoPratica trovaDocumentoAccessibile(
+            Long documentoPraticaId,
+            UtenteDetails utenteAutenticato
+    ) {
+        DocumentoRichiestoPratica documento =
+                documentoPraticaRepository
+                        .findById(documentoPraticaId)
+                        .orElseThrow(
+                                () ->
+                                        new ResourceNotFoundException(
+                                                DOCUMENTO_NON_ACCESSIBILE
+                                        )
+                        );
+
+        verificaAccessoAPratica(
+                documento.getPratica(),
+                utenteAutenticato,
+                DOCUMENTO_NON_ACCESSIBILE
+        );
+
+        return documento;
+    }
+
+    private AllegatoDocumento trovaAllegatoAccessibile(
+            Long allegatoId,
+            UtenteDetails utenteAutenticato
+    ) {
+        AllegatoDocumento allegato =
+                allegatoRepository
+                        .findById(allegatoId)
+                        .orElseThrow(
+                                () ->
+                                        new ResourceNotFoundException(
+                                                ALLEGATO_NON_ACCESSIBILE
+                                        )
+                        );
+
+        verificaAccessoAPratica(
+                allegato
+                        .getDocumentoPratica()
+                        .getPratica(),
+                utenteAutenticato,
+                ALLEGATO_NON_ACCESSIBILE
+        );
+
+        return allegato;
+    }
+
+    private void verificaAccessoAPratica(
+            Pratica pratica,
+            UtenteDetails utenteAutenticato,
+            String messaggio
+    ) {
+        if (utenteAutenticato.isOperatore()) {
+            return;
+        }
+
+        boolean titolareDellaPratica =
+                pratica
+                        .getCliente()
+                        .getId()
+                        .equals(
+                                utenteAutenticato.getId()
+                        );
+
+        if (!titolareDellaPratica) {
+            throw new ResourceNotFoundException(
+                    messaggio
+            );
+        }
+    }
+
+    /**
+     * Un cliente puo' ritirare soltanto cio' che ha caricato lui, e solo
+     * finche' la sede non lo ha validato: dopo la validazione il documento
+     * fa parte di una pratica in lavorazione e non e' piu' materiale suo.
+     */
+    private void verificaCancellazioneConsentita(
+            AllegatoDocumento allegato,
+            DocumentoRichiestoPratica documento,
+            UtenteDetails utenteAutenticato
+    ) {
+        if (utenteAutenticato.isOperatore()) {
+            return;
+        }
+
+        boolean caricatoDaLui =
+                allegato
+                        .getCaricatoDa()
+                        .getId()
+                        .equals(
+                                utenteAutenticato.getId()
+                        );
+
+        if (!caricatoDaLui) {
+            throw new OperationNotAllowedException(
+                    "Non puoi eliminare un allegato caricato dalla sede."
+            );
+        }
+
+        if (
+                documento.getStato()
+                        == StatoDocumentoPratica.VALIDATO
+        ) {
+            throw new OperationNotAllowedException(
+                    "Il documento è già stato validato dalla sede "
+                            + "e non può più essere modificato."
+            );
+        }
     }
 
     private void aggiornaStatoDocumentoDopoUpload(
@@ -240,19 +415,6 @@ public class AllegatoDocumentoServiceImpl
         );
     }
 
-    private AllegatoDocumento trovaAllegato(
-            Long id
-    ) {
-        return allegatoRepository
-                .findById(id)
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "Allegato non trovato."
-                                )
-                );
-    }
-
     private AllegatoDocumentoResponse toResponse(
             AllegatoDocumento allegato
     ) {
@@ -272,19 +434,5 @@ public class AllegatoDocumentoServiceImpl
                 autore.getCognome(),
                 allegato.getCaricatoIl()
         );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<AllegatoDocumentoResponse> trovaPerPratica(
-            Long praticaId
-    ) {
-        return allegatoRepository
-                .findByDocumentoPraticaPraticaIdOrderByCaricatoIlDesc(
-                        praticaId
-                )
-                .stream()
-                .map(this::toResponse)
-                .toList();
     }
 }

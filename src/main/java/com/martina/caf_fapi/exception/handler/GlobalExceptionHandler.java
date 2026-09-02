@@ -7,6 +7,7 @@ import com.martina.caf_fapi.exception.ResourceAlreadyExistsException;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.exception.response.ApiErrorResponse;
 import com.martina.caf_fapi.utenti.entity.Ruolo;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
             ResourceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    /*
+     * Diversi service segnalano una risorsa assente con la
+     * EntityNotFoundException di JPA invece che con la nostra
+     * ResourceNotFoundException. Senza questo handler finivano nel
+     * catch generico e il client riceveva un 500 "errore interno" al
+     * posto di un 404: un id inesistente non e' un guasto del server.
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleEntityNotFound(
+            EntityNotFoundException ex,
             HttpServletRequest request
     ) {
         return buildResponse(

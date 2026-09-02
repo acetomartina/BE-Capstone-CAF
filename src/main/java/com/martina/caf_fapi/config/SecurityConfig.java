@@ -2,6 +2,7 @@ package com.martina.caf_fapi.config;
 
 import com.martina.caf_fapi.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,6 +33,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /*
+     * Cablare l'origine nel codice significava non poter esporre il
+     * backend senza ricompilarlo. Il default resta il Vite locale, cosi'
+     * chi sviluppa non deve configurare nulla.
+     */
+    @Value("${app.cors.allowed-origins}")
+    private List<String> originiAmmesse;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -48,9 +57,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173"
-        ));
+        configuration.setAllowedOrigins(originiAmmesse);
 
         configuration.setAllowedMethods(List.of(
                 "GET",

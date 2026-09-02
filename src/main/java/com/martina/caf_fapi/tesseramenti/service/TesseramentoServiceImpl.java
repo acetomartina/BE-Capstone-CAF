@@ -1,5 +1,6 @@
 package com.martina.caf_fapi.tesseramenti.service;
 
+import com.martina.caf_fapi.exception.ResourceAlreadyExistsException;
 import com.martina.caf_fapi.exception.ResourceNotFoundException;
 import com.martina.caf_fapi.tesseramenti.dto.CreaTesseramentoRequest;
 import com.martina.caf_fapi.tesseramenti.dto.TesseramentoResponse;
@@ -44,6 +45,11 @@ public class TesseramentoServiceImpl
     ) {
         Utente cliente = trovaCliente(clienteId);
 
+        verificaAssenzaTesseramentoAttivo(
+                clienteId,
+                request.dataTesseramento()
+        );
+
         Tesseramento tesseramento =
                 new Tesseramento();
 
@@ -75,6 +81,33 @@ public class TesseramentoServiceImpl
         return tesseramentoMapper.toResponse(
                 salvato
         );
+    }
+
+    /**
+     * Una tessera copre un anno: finche' quella in corso non e' scaduta,
+     * emetterne un'altra creerebbe due periodi sovrapposti e una quota
+     * incassata due volte. Il rinnovo si fa quando la precedente e'
+     * arrivata a termine, oppure dopo averla annullata.
+     */
+    private void verificaAssenzaTesseramentoAttivo(
+            Long clienteId,
+            LocalDate dataNuovoTesseramento
+    ) {
+        tesseramentoRepository
+                .findFirstByClienteIdAndEliminatoFalseAndAnnullatoFalseAndDataScadenzaGreaterThanEqualOrderByDataScadenzaAsc(
+                        clienteId,
+                        dataNuovoTesseramento
+                )
+                .ifPresent(attivo -> {
+                    throw new ResourceAlreadyExistsException(
+                            ("Il cliente ha già un tesseramento valido "
+                                    + "fino al %s. Attendi la scadenza "
+                                    + "oppure annulla quello in corso.")
+                                    .formatted(
+                                            attivo.getDataScadenza()
+                                    )
+                    );
+                });
     }
 
     @Override

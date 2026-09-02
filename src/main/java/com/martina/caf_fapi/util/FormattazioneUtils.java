@@ -82,8 +82,30 @@ public final class FormattazioneUtils {
                 : valore.replaceAll("\\s+", "");
     }
 
+    /**
+     * Accetta solo http e https.
+     *
+     * Il valore finisce in un attributo di una pagina (l'avatar del
+     * profilo): uno schema come {@code javascript:} o {@code data:}
+     * trasformerebbe un campo dell'anagrafica in codice eseguito nel
+     * browser di chi guarda. Uno schema non riconosciuto viene scartato
+     * invece che salvato: meglio nessuna immagine che una trappola.
+     */
     public static String normalizzaUrl(String url) {
-        return normalizzaTestoBase(url);
+        String valore = normalizzaTestoBase(url);
+
+        if (valore == null) {
+            return null;
+        }
+
+        String minuscolo =
+                valore.toLowerCase(java.util.Locale.ROOT);
+
+        boolean schemaAmmesso =
+                minuscolo.startsWith("http://")
+                        || minuscolo.startsWith("https://");
+
+        return schemaAmmesso ? valore : null;
     }
 
     private static String normalizzaTestoBase(String testo) {

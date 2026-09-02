@@ -8,6 +8,7 @@ import com.martina.caf_fapi.appuntamenti.entity.Appuntamento;
 import com.martina.caf_fapi.appuntamenti.enums.StatoAppuntamento;
 import com.martina.caf_fapi.appuntamenti.mapper.AppuntamentoMapper;
 import com.martina.caf_fapi.appuntamenti.repository.AppuntamentoRepository;
+import com.martina.caf_fapi.exception.InvalidDataException;
 import com.martina.caf_fapi.pratiche.entity.Pratica;
 import com.martina.caf_fapi.pratiche.repository.PraticaRepository;
 import com.martina.caf_fapi.utenti.entity.Utente;
@@ -17,13 +18,12 @@ import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -43,6 +43,9 @@ public class AppuntamentoServiceImpl
 
     private final AppuntamentoMapper
             appuntamentoMapper;
+
+    private static final DateTimeFormatter FORMATO_ORARIO =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
     public List<AppuntamentoResponse> trovaTutti(
@@ -155,6 +158,13 @@ public class AppuntamentoServiceImpl
                         "Responsabile"
                 );
 
+        verificaAgendaLibera(
+                responsabile,
+                request.inizio(),
+                request.fine(),
+                null
+        );
+
         Appuntamento appuntamento =
                 Appuntamento.builder()
                         .cliente(cliente)
@@ -258,6 +268,13 @@ public class AppuntamentoServiceImpl
                         "Responsabile"
                 );
 
+        verificaAgendaLibera(
+                responsabile,
+                request.inizio(),
+                request.fine(),
+                appuntamento.getId()
+        );
+
         appuntamento.setCliente(
                 cliente
         );
@@ -352,10 +369,7 @@ public class AppuntamentoServiceImpl
                                                 .isBlank()
                         )
         ) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Indicare il motivo dell'annullamento"
-            );
+            throw new InvalidDataException("Indicare il motivo dell'annullamento");
         }
 
         appuntamento.setStato(
@@ -481,11 +495,58 @@ public class AppuntamentoServiceImpl
                                 cliente.getId()
                         )
         ) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "La pratica selezionata non appartiene al cliente"
-            );
+            throw new InvalidDataException("La pratica selezionata non appartiene al cliente");
         }
+    }
+
+    /**
+     * Impedisce di fissare due appuntamenti allo stesso operatore nella
+     * stessa fascia oraria: in una sede con pochi sportelli il doppio
+     * impegno si scopre altrimenti solo quando il cliente e' gia' li'.
+     *
+     * Senza responsabile non c'e' niente da proteggere: l'appuntamento
+     * non impegna ancora nessuno.
+     */
+    private void verificaAgendaLibera(
+            Utente responsabile,
+            LocalDateTime inizio,
+            LocalDateTime fine,
+            Long idDaEscludere
+    ) {
+        if (responsabile == null) {
+            return;
+        }
+
+        List<Appuntamento> sovrapposti =
+                appuntamentoRepository
+                        .trovaSovrapposti(
+                                responsabile.getId(),
+                                inizio,
+                                fine,
+                                idDaEscludere
+                        );
+
+        if (sovrapposti.isEmpty()) {
+            return;
+        }
+
+        Appuntamento primo =
+                sovrapposti.getFirst();
+
+        throw new InvalidDataException(
+                "%s %s ha gia' un appuntamento dalle %s alle %s: %s."
+                        .formatted(
+                                responsabile.getNome(),
+                                responsabile.getCognome(),
+                                FORMATO_ORARIO.format(
+                                        primo.getInizio()
+                                ),
+                                FORMATO_ORARIO.format(
+                                        primo.getFine()
+                                ),
+                                primo.getTitolo()
+                        )
+        );
     }
 
     private void validaIntervallo(
@@ -496,17 +557,11 @@ public class AppuntamentoServiceImpl
                 inizio == null ||
                         fine == null
         ) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Data di inizio e fine sono obbligatorie"
-            );
+            throw new InvalidDataException("Data di inizio e fine sono obbligatorie");
         }
 
         if (!fine.isAfter(inizio)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "La fine deve essere successiva all'inizio"
-            );
+            throw new InvalidDataException("La fine deve essere successiva all'inizio");
         }
     }
 
@@ -530,10 +585,7 @@ public class AppuntamentoServiceImpl
                 normalizza(valore);
 
         if (normalizzato == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Il titolo è obbligatorio"
-            );
+            throw new InvalidDataException("Il titolo è obbligatorio");
         }
 
         return normalizzato;

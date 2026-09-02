@@ -153,6 +153,8 @@ public class UtenteServiceImpl implements UtenteService {
         Utente utente =
                 trovaEntitaPerId(id);
 
+        verificaPermessoSuUtente(utente);
+
         normalizzaUpdateRequest(request);
 
         verificaEmailDuplicata(
@@ -181,6 +183,8 @@ public class UtenteServiceImpl implements UtenteService {
     ) {
         Utente utente =
                 trovaEntitaPerId(id);
+
+        verificaPermessoSuUtente(utente);
 
         if (nuovoRuolo == null) {
             throw new InvalidDataException(
@@ -227,6 +231,8 @@ public class UtenteServiceImpl implements UtenteService {
         Utente utente =
                 trovaEntitaPerId(id);
 
+        verificaPermessoSuUtente(utente);
+
         utente.setAttivo(true);
 
         Utente utenteAggiornato =
@@ -244,6 +250,8 @@ public class UtenteServiceImpl implements UtenteService {
     ) {
         Utente utente =
                 trovaEntitaPerId(id);
+
+        verificaPermessoSuUtente(utente);
 
         utente.setAttivo(false);
 
@@ -474,6 +482,60 @@ public class UtenteServiceImpl implements UtenteService {
                     "Non possiedi i permessi per creare o assegnare il ruolo "
                             + ruoloRichiesto
                             + "."
+            );
+        }
+    }
+
+    /**
+     * Verifica che chi sta operando possa agire su questo utente.
+     *
+     * La regola e' simmetrica a {@link #verificaPermessoCreazioneRuolo}:
+     * si puo' intervenire soltanto su utenti il cui ruolo si sarebbe
+     * potuti assegnare. Un ADMIN crea USER e CLIENTE, quindi su USER e
+     * CLIENTE puo' anche intervenire — e su nessun altro.
+     *
+     * Senza questo controllo bastava un ADMIN per cambiare l'email del
+     * SUPER_ADMIN e poi chiederne il recupero password: l'account piu'
+     * privilegiato del sistema cambiava proprietario senza che nessuno
+     * avesse mai avuto bisogno della sua password.
+     */
+    private void verificaPermessoSuUtente(Utente bersaglio) {
+
+        Ruolo ruoloBersaglio = bersaglio.getRuolo();
+
+        if (ruoloBersaglio == Ruolo.SUPER_ADMIN) {
+            throw new AccessDeniedException(
+                    "L'utente SUPER_ADMIN non è modificabile tramite API."
+            );
+        }
+
+        Ruolo ruoloAutenticato = recuperaRuoloAutenticato();
+
+        /*
+         * Nessuno puo' agire sul proprio stesso livello, quindi questa
+         * matrice copre anche l'auto-modifica: un ADMIN che prova a
+         * declassare o disattivare se stesso ricade nel caso
+         * "ADMIN su ADMIN" e viene fermato qui. Non serve un controllo
+         * separato sull'identita'.
+         */
+        boolean consentito =
+                switch (ruoloAutenticato) {
+                    case SUPER_ADMIN ->
+                            true;
+
+                    case ADMIN ->
+                            ruoloBersaglio == Ruolo.USER
+                                    || ruoloBersaglio == Ruolo.CLIENTE;
+
+                    case USER ->
+                            ruoloBersaglio == Ruolo.CLIENTE;
+
+                    case CLIENTE -> false;
+                };
+
+        if (!consentito) {
+            throw new AccessDeniedException(
+                    "Non possiedi i permessi per intervenire su questo utente."
             );
         }
     }

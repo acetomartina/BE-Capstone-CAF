@@ -16,7 +16,4 @@ public interface MacroAreaRepository
 
     Optional<MacroArea>
     findByIdAndAttivaTrue(Long id);
-
-    Optional<MacroArea>
-    findBySlugAndAttivaTrue(String slug);
 }

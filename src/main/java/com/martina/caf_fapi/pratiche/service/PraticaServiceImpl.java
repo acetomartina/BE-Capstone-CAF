@@ -98,6 +98,33 @@ public class PraticaServiceImpl
     }
 
     @Override
+    public PraticaResponse trovaPerIdDelCliente(
+            Long praticaId,
+            Long clienteId
+    ) {
+        /*
+         * Cerchiamo contemporaneamente per ID della pratica
+         * e ID del cliente. In questo modo un cliente non può
+         * visualizzare una pratica appartenente a un altro account.
+         */
+        Pratica pratica =
+                praticaRepository
+                        .findByIdAndClienteIdAndEliminatoFalse(
+                                praticaId,
+                                clienteId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Pratica non trovata"
+                                )
+                        );
+
+        return praticaMapper.toResponse(
+                pratica
+        );
+    }
+
+    @Override
     public PraticaResponse trovaPerId(
             Long id
     ) {

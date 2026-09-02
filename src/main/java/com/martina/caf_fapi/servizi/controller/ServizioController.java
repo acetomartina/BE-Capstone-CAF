@@ -19,6 +19,10 @@ import java.util.List;
 )
 public class ServizioController {
 
+    /* Il recupero per slug vive solo in ServizioPublicController, sotto
+       /api/public: e' la vista del catalogo per chi naviga il sito. Qui
+       ne esisteva una copia fuori dal prefisso /api che nessuno chiamava. */
+
     private final ServizioService servizioService;
 
     @GetMapping("/api/macro-aree")
@@ -75,19 +79,6 @@ public class ServizioController {
                         id,
                         request
                 )
-        );
-    }
-
-    @GetMapping("/servizi/{slug}")
-    public ResponseEntity<ServizioResponse>
-    trovaServizioPerSlug(
-            @PathVariable String slug
-    ) {
-        return ResponseEntity.ok(
-                servizioService
-                        .trovaServizioPerSlug(
-                                slug
-                        )
         );
     }
 }

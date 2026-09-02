@@ -6,6 +6,7 @@ import com.martina.caf_fapi.auth.security.UtenteDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,9 +14,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Anche un CLIENTE deve poter caricare i propri documenti, quindi qui non
+ * si filtra per ruolo: e' il service a verificare, per ogni allegato, che
+ * appartenga a una pratica di chi sta chiamando.
+ */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class AllegatoDocumentoController {
 
     private final AllegatoDocumentoService
@@ -37,7 +44,7 @@ public class AllegatoDocumentoController {
                 allegatoDocumentoService.carica(
                         documentoId,
                         file,
-                        utenteDetails.getId()
+                        utenteDetails
                 );
 
         return ResponseEntity
@@ -50,12 +57,15 @@ public class AllegatoDocumentoController {
     )
     public ResponseEntity<List<AllegatoDocumentoResponse>>
     trovaPerDocumento(
-            @PathVariable Long documentoId
+            @PathVariable Long documentoId,
+            @AuthenticationPrincipal
+            UtenteDetails utenteDetails
     ) {
         return ResponseEntity.ok(
                 allegatoDocumentoService
                         .trovaPerDocumento(
-                                documentoId
+                                documentoId,
+                                utenteDetails
                         )
         );
     }
@@ -65,11 +75,14 @@ public class AllegatoDocumentoController {
     )
     public ResponseEntity<Resource>
     scarica(
-            @PathVariable Long allegatoId
+            @PathVariable Long allegatoId,
+            @AuthenticationPrincipal
+            UtenteDetails utenteDetails
     ) {
         AllegatoDocumentoService.DownloadAllegato download =
                 allegatoDocumentoService.scarica(
-                        allegatoId
+                        allegatoId,
+                        utenteDetails
                 );
 
         ContentDisposition contentDisposition =
@@ -101,10 +114,13 @@ public class AllegatoDocumentoController {
     )
     public ResponseEntity<Void>
     elimina(
-            @PathVariable Long allegatoId
+            @PathVariable Long allegatoId,
+            @AuthenticationPrincipal
+            UtenteDetails utenteDetails
     ) {
         allegatoDocumentoService.elimina(
-                allegatoId
+                allegatoId,
+                utenteDetails
         );
 
         return ResponseEntity.noContent()
@@ -116,12 +132,15 @@ public class AllegatoDocumentoController {
     )
     public ResponseEntity<List<AllegatoDocumentoResponse>>
     trovaPerPratica(
-            @PathVariable Long praticaId
+            @PathVariable Long praticaId,
+            @AuthenticationPrincipal
+            UtenteDetails utenteDetails
     ) {
         return ResponseEntity.ok(
                 allegatoDocumentoService
                         .trovaPerPratica(
-                                praticaId
+                                praticaId,
+                                utenteDetails
                         )
         );
     }

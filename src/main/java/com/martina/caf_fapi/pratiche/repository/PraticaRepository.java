@@ -21,13 +21,13 @@ public interface PraticaRepository
             Long id
     );
 
-    Page<Pratica> findByClienteIdAndEliminatoFalse(
-            Long clienteId,
-            Pageable pageable
+    Optional<Pratica> findByIdAndClienteIdAndEliminatoFalse(
+            Long id,
+            Long clienteId
     );
 
-    Page<Pratica> findByResponsabileIdAndEliminatoFalse(
-            Long responsabileId,
+    Page<Pratica> findByClienteIdAndEliminatoFalse(
+            Long clienteId,
             Pageable pageable
     );
 

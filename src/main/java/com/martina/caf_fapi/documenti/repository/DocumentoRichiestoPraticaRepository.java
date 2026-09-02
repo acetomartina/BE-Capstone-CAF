@@ -24,15 +24,6 @@ public interface DocumentoRichiestoPraticaRepository
             Long praticaId
     );
 
-    long countByPraticaId(
-            Long praticaId
-    );
-
-    long countByPraticaIdAndStato(
-            Long praticaId,
-            StatoDocumentoPratica stato
-    );
-
     @EntityGraph(
             attributePaths = {
                     "pratica",

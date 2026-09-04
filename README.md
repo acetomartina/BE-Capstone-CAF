@@ -207,10 +207,4 @@ vengono spenti.
 
 ---
 
-## Stato del progetto
 
-Sono attivi il **sito pubblico** e l'**area amministrativa**.
-
-L'area riservata ai clienti e la relativa attivazione dell'account
-sono sviluppate ma sospese lato interfaccia, in attesa di
-completamento. Gli endpoint restano nel codice.

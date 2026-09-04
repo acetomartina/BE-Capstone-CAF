@@ -28,30 +28,19 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Locale;
 
-
 @Service
 @RequiredArgsConstructor
 public class ClienteServiceImpl implements ClienteService {
 
-    /*
-     * La password generata alla creazione non viene comunicata
-     * né all'operatore né al cliente.
-     *
-     * Serve soltanto perché la colonna password di utenti è NOT NULL.
-     * Il cliente sceglierà la propria password tramite il futuro
-     * flusso di attivazione account.
-     */
     private static final SecureRandom SECURE_RANDOM =
             new SecureRandom();
 
     private static final int BYTE_PASSWORD_TEMPORANEA = 32;
 
-
     private final UtenteRepository utenteRepository;
     private final ClienteMapper clienteMapper;
     private final UtenteService utenteService;
     private final AccountActivationService accountActivationService;
-
 
     @Override
     @Transactional(readOnly = true)
@@ -61,8 +50,6 @@ public class ClienteServiceImpl implements ClienteService {
 
         return clienteMapper.toResponse(cliente);
     }
-
-
 
     @Override
     @Transactional(readOnly = true)
@@ -127,7 +114,6 @@ public class ClienteServiceImpl implements ClienteService {
                 .map(clienteMapper::toResponse);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Page<ClienteResponse> cercaPerCodiceFiscale(
@@ -144,7 +130,6 @@ public class ClienteServiceImpl implements ClienteService {
                 .map(clienteMapper::toResponse);
     }
 
-
     private Utente trovaClientePerId(Long id) {
 
         return utenteRepository
@@ -158,7 +143,6 @@ public class ClienteServiceImpl implements ClienteService {
                         )
                 );
     }
-
 
     @Override
     @Transactional
@@ -193,13 +177,6 @@ public class ClienteServiceImpl implements ClienteService {
                         creaUtenteRequest
                 );
 
-        /*
-         * UtenteService crea normalmente gli account come attivi.
-         *
-         * Per un cliente creato da un operatore non vogliamo invece
-         * consentire il login finché il cliente non ha completato
-         * l'attivazione e scelto personalmente la propria password.
-         */
         Utente cliente =
                 utenteRepository
                         .findById(utenteCreato.getId())
@@ -218,7 +195,6 @@ public class ClienteServiceImpl implements ClienteService {
 
         return clienteMapper.toResponse(cliente);
     }
-
 
     @Override
     @Transactional
@@ -348,7 +324,6 @@ public class ClienteServiceImpl implements ClienteService {
         utenteRepository.save(cliente);
     }
 
-
     private Utente trovaClienteEliminatoPerId(
             Long id
     ) {
@@ -374,7 +349,6 @@ public class ClienteServiceImpl implements ClienteService {
                 );
     }
 
-
     @Override
     @Transactional
     public ClienteResponse ripristinaCliente(
@@ -397,7 +371,6 @@ public class ClienteServiceImpl implements ClienteService {
         );
     }
 
-
     private Long recuperaIdUtenteAutenticato() {
 
         Authentication authentication =
@@ -417,14 +390,6 @@ public class ClienteServiceImpl implements ClienteService {
         return null;
     }
 
-
-    /*
-     * Genera una credenziale interna ad alta entropia.
-     *
-     * Non viene mai mostrata o inviata via email.
-     * Aggiungiamo esplicitamente i quattro tipi di carattere richiesti
-     * dalla validazione di CreaUtenteRequest.
-     */
     private String generaPasswordTemporanea() {
 
         byte[] casuali =

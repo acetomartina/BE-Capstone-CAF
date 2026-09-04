@@ -33,11 +33,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    /*
-     * Cablare l'origine nel codice significava non poter esporre il
-     * backend senza ricompilarlo. Il default resta il Vite locale, cosi'
-     * chi sviluppa non deve configurare nulla.
-     */
     @Value("${app.cors.allowed-origins}")
     private List<String> originiAmmesse;
 

@@ -51,12 +51,6 @@ public class AuthController {
         );
     }
 
-    /**
-     * Chi sono io, secondo il token che sto usando.
-     *
-     * Il frontend la chiama a ogni avvio per ricostruire la sessione:
-     * i dati arrivano dal database e non dal browser.
-     */
     @GetMapping("/me")
     public ResponseEntity<UtenteResponse> utenteCorrente(
             @AuthenticationPrincipal UtenteDetails dettagli
@@ -68,13 +62,6 @@ public class AuthController {
         );
     }
 
-    /**
-     * Risponde sempre 200 con lo stesso messaggio,
-     * che l'account esista oppure no.
-     *
-     * In questo modo non riveliamo se una determinata
-     * email è registrata nel sistema.
-     */
     @PostMapping("/recupera-password")
     public ResponseEntity<MessaggioResponse> recuperaPassword(
             @Valid @RequestBody RecuperoPasswordRequest request

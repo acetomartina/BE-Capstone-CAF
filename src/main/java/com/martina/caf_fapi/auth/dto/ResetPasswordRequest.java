@@ -21,11 +21,6 @@ public class ResetPasswordRequest {
     @ToString.Exclude
     private String token;
 
-    /*
-     * Stessi vincoli di CreaUtenteRequest: il reset imposta una password
-     * nuova, quindi deve valere la regola della creazione utente e non
-     * quella piu' larga del login. Il frontend valida con la stessa regola.
-     */
     @NotBlank(message = "La password è obbligatoria.")
     @Size(
             min = 8,

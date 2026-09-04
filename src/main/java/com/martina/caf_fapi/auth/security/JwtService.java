@@ -56,11 +56,9 @@ public class JwtService {
                 .plusSeconds(jwtExpiration / 1000);
     }
 
-
     public String estraiUsername(String token) {
         return estraiClaim(token, Claims::getSubject);
     }
-
 
     public boolean tokenValido(
             String token,
@@ -104,7 +102,6 @@ public class JwtService {
                 == marcaturaPassword(dettagli.getPasswordModificataIl());
     }
 
-    /** Zero per gli utenti che non hanno mai cambiato password. */
     private long marcaturaPassword(LocalDateTime passwordModificataIl) {
 
         if (passwordModificataIl == null) {

@@ -38,13 +38,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Gli allegati sono documenti fiscali e di identita'.
- *
- * Il rischio concreto non e' che il codice sbagli a leggere un file, ma
- * che lo mostri alla persona sbagliata: qui si verifica che ogni via
- * d'accesso passi dal titolare della pratica.
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AllegatoDocumentoServiceImplTest {
@@ -77,8 +70,6 @@ class AllegatoDocumentoServiceImplTest {
 
     @InjectMocks
     private AllegatoDocumentoServiceImpl service;
-
-    /* ---------------------------------------------------------------- */
 
     private static Utente utente(Long id, Ruolo ruolo) {
         Utente utente = new Utente();
@@ -138,10 +129,6 @@ class AllegatoDocumentoServiceImplTest {
         return allegato;
     }
 
-    /**
-     * Scenario base: la pratica e il documento appartengono al cliente
-     * titolare, e l'allegato lo ha caricato lui.
-     */
     private AllegatoDocumento predisponiAllegatoDelTitolare(
             StatoDocumentoPratica statoDocumento
     ) {
@@ -166,8 +153,6 @@ class AllegatoDocumentoServiceImplTest {
 
         return allegato;
     }
-
-    /* ---------------------------------------------------------------- */
 
     @Nested
     @DisplayName("Download")
@@ -470,13 +455,9 @@ class AllegatoDocumentoServiceImplTest {
                     )
             ).isInstanceOf(ResourceNotFoundException.class);
 
-            /* Il controllo precede la scrittura su disco: un file di un
-               estraneo non deve nemmeno essere salvato e poi rimosso. */
             verify(fileStorageService, never()).salva(null);
         }
     }
-
-    /* ---------------------------------------------------------------- */
 
     private static String catturaMessaggio(Runnable azione) {
         try {

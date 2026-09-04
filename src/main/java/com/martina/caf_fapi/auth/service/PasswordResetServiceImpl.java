@@ -81,7 +81,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             return;
         }
 
-        /* Una nuova richiesta rende inutilizzabili i link precedenti. */
         tokenRepository.eliminaTokenNonUsati(utente.getId());
 
         String token = generaToken();
@@ -130,7 +129,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         utente.setPasswordModificataIl(adesso);
         utenteRepository.save(utente);
 
-        /* Consumato: da qui in poi lo stesso link non funziona piu'. */
         token.setUsatoIl(adesso);
         tokenRepository.save(token);
 

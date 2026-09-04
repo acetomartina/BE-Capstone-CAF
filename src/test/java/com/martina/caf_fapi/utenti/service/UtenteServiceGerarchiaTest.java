@@ -31,14 +31,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * La gerarchia dei ruoli deve valere anche su chi si sta modificando,
- * non solo su quale ruolo si sta assegnando.
- *
- * Il caso che questi test presidiano: un ADMIN che cambia l'email del
- * SUPER_ADMIN e poi ne chiede il recupero password si impossessa
- * dell'account piu' privilegiato senza conoscerne la password.
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class UtenteServiceGerarchiaTest {
@@ -82,7 +74,6 @@ class UtenteServiceGerarchiaTest {
         return utente;
     }
 
-    /** Mette nel SecurityContext l'utente che sta effettuando la chiamata. */
     private void autenticatoCome(Long id, Ruolo ruolo) {
         UtenteDetails dettagli =
                 new UtenteDetails(utente(id, ruolo));
@@ -234,12 +225,6 @@ class UtenteServiceGerarchiaTest {
             verify(utenteRepository, never()).save(any());
         }
 
-        /*
-         * Non serve un controllo esplicito sull'identita': agire su di se'
-         * significa agire sul proprio livello, e la gerarchia lo vieta
-         * gia'. Il test resta per fissare la conseguenza, che e' quella
-         * che conta: nessuno si chiude fuori da solo.
-         */
         @Test
         @DisplayName("nessuno si chiude fuori da solo")
         void autodisattivazioneImpedita() {

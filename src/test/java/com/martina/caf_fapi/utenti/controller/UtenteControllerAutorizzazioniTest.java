@@ -15,21 +15,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * La gestione utenti e' riservata ad ADMIN e SUPER_ADMIN, e il cambio di
- * ruolo al solo SUPER_ADMIN.
- * <p>
- * Gli endpoint che modificano sono provati su un id inesistente, cosi' un
- * permesso concesso si manifesta come 404 senza toccare dati veri. La
- * transazione di test fa da rete: se un'autorizzazione venisse rimossa,
- * l'eventuale scrittura verrebbe annullata invece di restare a database.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 class UtenteControllerAutorizzazioniTest {
 
-    /** Nessun utente con questo id: isola il permesso dall'effetto. */
     private static final long ID_INESISTENTE = 999_999L;
 
     private static final String UTENTE_VALIDO = """
@@ -137,11 +127,6 @@ class UtenteControllerAutorizzazioniTest {
                 .andExpect(status().isForbidden());
     }
 
-    /*
-     * Il confine piu' importante di tutti: chi puo' cambiare i ruoli puo'
-     * promuovere se stesso. Se questo test smette di passare, un
-     * amministratore puo' diventare super admin da solo.
-     */
     @Test
     @DisplayName("un ADMIN non puo' cambiare i ruoli")
     @WithMockUser(roles = "ADMIN")
@@ -160,7 +145,6 @@ class UtenteControllerAutorizzazioniTest {
                 .andExpect(status().isForbidden());
     }
 
-    /* Il permesso c'e': si arriva al servizio, che non trova l'utente. */
     @Test
     @DisplayName("un SUPER_ADMIN arriva al cambio ruolo")
     @WithMockUser(roles = "SUPER_ADMIN")

@@ -14,17 +14,8 @@ import java.util.Optional;
 public interface TokenResetPasswordRepository
         extends JpaRepository<TokenResetPassword, Long> {
 
-    /** Il token in chiaro non e' mai salvato: si cerca sempre per hash. */
     Optional<TokenResetPassword> findByTokenHash(String tokenHash);
 
-    /**
-     * Elimina i token ancora aperti di un utente, cosi' che una nuova
-     * richiesta renda inutilizzabili i link inviati in precedenza.
-     * <p>
-     * Cancella invece di marcare: {@code usatoIl} deve continuare a
-     * significare "qualcuno ha aperto questo link", non "e' decaduto".
-     * I token gia' consumati restano in tabella come traccia.
-     */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             DELETE FROM TokenResetPassword t
@@ -33,7 +24,6 @@ public interface TokenResetPasswordRepository
             """)
     int eliminaTokenNonUsati(@Param("utenteId") Long utenteId);
 
-    /** Pulizia dei token scaduti, per non far crescere la tabella. */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             DELETE FROM TokenResetPassword t

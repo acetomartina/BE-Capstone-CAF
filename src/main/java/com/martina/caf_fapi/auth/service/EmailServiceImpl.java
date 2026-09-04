@@ -499,11 +499,6 @@ public class EmailServiceImpl implements EmailService {
                     OGGETTO_ATTIVAZIONE_ACCOUNT
             );
 
-            /*
-             * Inviamo entrambe le versioni:
-             * - testo semplice per i client meno moderni;
-             * - HTML per la versione grafica.
-             */
             helper.setText(
                     corpoAttivazioneAccountTestuale(
                             nome,

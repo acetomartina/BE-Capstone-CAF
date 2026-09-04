@@ -33,11 +33,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Il doppio impegno di un operatore e' un errore che non si vede finche'
- * non arrivano due clienti contemporaneamente allo stesso sportello:
- * questi test tengono ferma la regola che lo impedisce.
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AppuntamentoServiceImplTest {
@@ -209,9 +204,6 @@ class AppuntamentoServiceImplTest {
                         null
                 );
 
-        /* Il tipo conta: InvalidDataException diventa 400, mentre prima
-           ResponseStatusException produceva un corpo di errore diverso
-           da quello che il frontend sa leggere. */
         assertThatThrownBy(() -> service.crea(capovolta))
                 .isInstanceOf(InvalidDataException.class);
     }

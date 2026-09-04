@@ -6,13 +6,6 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-/**
- * Token monouso per la reimpostazione della password.
- * <p>
- * Nel database finisce solo l'hash SHA-256 del token: il valore in chiaro
- * esiste unicamente nel link inviato per mail. Un dump della tabella non
- * permette quindi di reimpostare la password di nessuno.
- */
 @Entity
 @Table(
         name = "token_reset_password",
@@ -50,7 +43,6 @@ public class TokenResetPassword {
     @Column(nullable = false)
     private LocalDateTime scadenza;
 
-    /** Valorizzato al primo utilizzo: rende il token monouso. */
     @Column(name = "usato_il")
     private LocalDateTime usatoIl;
 

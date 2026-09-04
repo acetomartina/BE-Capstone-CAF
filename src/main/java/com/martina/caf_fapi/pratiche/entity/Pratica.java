@@ -50,11 +50,6 @@ public class Pratica extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*
-     * Identificativo leggibile della pratica.
-     *
-     * Nel database esiste già come numero_pratica.
-     */
     @Column(
             name = "numero_pratica",
             nullable = false,
@@ -63,12 +58,6 @@ public class Pratica extends BaseEntity {
     )
     private String numeroPratica;
 
-    /*
-     * Cliente titolare della pratica.
-     *
-     * Nel database storico la FK si chiama utente_id.
-     * Il service verificherà che l'utente abbia ruolo CLIENTE.
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "utente_id",
@@ -78,17 +67,6 @@ public class Pratica extends BaseEntity {
             )
     )
     private Utente cliente;
-
-    /*
-     * Servizio CAF associato alla pratica.
-     *
-     * Per ora manteniamo direttamente l'id perché il database
-     * contiene già la tabella servizi, mentre nel backend non
-     * abbiamo ancora modellato l'entity Servizio.
-     *
-     * Verrà trasformato in una relazione @ManyToOne quando
-     * creeremo il modulo servizi.
-     */
 
     @ManyToOne(
             fetch = FetchType.LAZY,
@@ -100,12 +78,6 @@ public class Pratica extends BaseEntity {
     )
     private Servizio servizio;
 
-    /*
-     * Responsabile della pratica madre.
-     *
-     * Nel vecchio schema questa relazione è assegnata_a_id.
-     * Può restare null finché la pratica non viene assegnata.
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "assegnata_a_id",
@@ -115,9 +87,6 @@ public class Pratica extends BaseEntity {
     )
     private Utente responsabile;
 
-    /*
-     * Titolo/oggetto sintetico della pratica.
-     */
     @Column(
             name = "oggetto",
             nullable = false,
@@ -149,24 +118,12 @@ public class Pratica extends BaseEntity {
     @Column(name = "data_scadenza")
     private LocalDate dataScadenza;
 
-    /*
-     * Nel database esiste già come chiuso_il.
-     * Manteniamo LocalDateTime perché la colonna contiene
-     * anche l'orario di chiusura.
-     */
     @Column(name = "chiuso_il")
     private LocalDateTime chiusoIl;
 
-    /*
-     * Campo nuovo che aggiungeremo con la V4.
-     */
     @Column(length = 2000)
     private String note;
 
-    /*
-     * Una pratica madre può avere più sottopratiche,
-     * eventualmente affidate a operatori differenti.
-     */
     @OneToMany(
             mappedBy = "pratica",
             cascade = CascadeType.ALL,

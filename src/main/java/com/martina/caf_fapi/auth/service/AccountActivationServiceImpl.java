@@ -63,10 +63,6 @@ public class AccountActivationServiceImpl
             );
         }
 
-        /*
-         * Un nuovo invito rende inutilizzabili
-         * eventuali link precedenti.
-         */
         tokenRepository.eliminaTokenNonUsati(
                 utente.getId()
         );
@@ -86,12 +82,6 @@ public class AccountActivationServiceImpl
                         .build()
         );
 
-        /*
-         * Qui, diversamente dal recupero password,
-         * vogliamo sapere se l'invio fallisce:
-         * l'operatore sta creando davvero un cliente
-         * e deve poter essere informato del problema.
-         */
         emailService.inviaInvitoAttivazioneAccount(
                 utente.getEmail(),
                 utente.getNome(),
@@ -176,10 +166,6 @@ public class AccountActivationServiceImpl
 
         utenteRepository.save(utente);
 
-        /*
-         * Il token viene consumato soltanto
-         * dopo l'attivazione completata.
-         */
         token.setUsatoIl(adesso);
 
         tokenRepository.save(token);

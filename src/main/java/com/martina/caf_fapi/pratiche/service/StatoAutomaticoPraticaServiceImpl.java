@@ -41,11 +41,6 @@ public class StatoAutomaticoPraticaServiceImpl
                                         )
                         );
 
-        /*
-         * Questi stati derivano da decisioni
-         * operative e non devono essere
-         * modificati automaticamente.
-         */
         if (
                 statoProtetto(
                         pratica.getStato()
@@ -54,12 +49,6 @@ public class StatoAutomaticoPraticaServiceImpl
             return;
         }
 
-        /*
-         * Garantisce che eventuali modifiche
-         * ai documenti effettuate nella stessa
-         * transazione siano considerate
-         * dalla query successiva.
-         */
         documentoRichiestoPraticaRepository
                 .flush();
 
@@ -97,11 +86,6 @@ public class StatoAutomaticoPraticaServiceImpl
                 nuovoStato
         );
 
-        /*
-         * Una pratica riportata automaticamente
-         * in lavorazione o in attesa documenti
-         * non può risultare chiusa.
-         */
         pratica.setChiusoIl(
                 null
         );

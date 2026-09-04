@@ -67,8 +67,6 @@ class JwtServiceTest {
 
         String token = jwtService.generaToken(dettagli(prima));
 
-        /* Stesso utente, stessa email: cambia solo il momento del
-           cambio password, come dopo un reset. */
         UtenteDetails dopoIlReset = dettagli(LocalDateTime.now());
 
         assertThat(jwtService.tokenValido(token, dopoIlReset)).isFalse();
@@ -109,8 +107,6 @@ class JwtServiceTest {
     void tokenSenzaClaim() {
         long adesso = System.currentTimeMillis();
 
-        /* Come i token emessi prima di questa funzionalità: firma valida,
-           scadenza valida, ma nessuna informazione sulla password. */
         String tokenVecchio = Jwts.builder()
                 .subject(EMAIL)
                 .issuedAt(new Date(adesso))

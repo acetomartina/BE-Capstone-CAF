@@ -499,14 +499,6 @@ public class AppuntamentoServiceImpl
         }
     }
 
-    /**
-     * Impedisce di fissare due appuntamenti allo stesso operatore nella
-     * stessa fascia oraria: in una sede con pochi sportelli il doppio
-     * impegno si scopre altrimenti solo quando il cliente e' gia' li'.
-     *
-     * Senza responsabile non c'e' niente da proteggere: l'appuntamento
-     * non impegna ancora nessuno.
-     */
     private void verificaAgendaLibera(
             Utente responsabile,
             LocalDateTime inizio,

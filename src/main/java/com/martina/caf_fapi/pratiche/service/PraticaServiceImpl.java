@@ -102,11 +102,6 @@ public class PraticaServiceImpl
             Long praticaId,
             Long clienteId
     ) {
-        /*
-         * Cerchiamo contemporaneamente per ID della pratica
-         * e ID del cliente. In questo modo un cliente non può
-         * visualizzare una pratica appartenente a un altro account.
-         */
         Pratica pratica =
                 praticaRepository
                         .findByIdAndClienteIdAndEliminatoFalse(
@@ -136,14 +131,6 @@ public class PraticaServiceImpl
         );
     }
 
-    /*
-     * Il responsabile della pratica viene assegnato
-     * automaticamente all'utente autenticato che
-     * sta creando la pratica.
-     *
-     * Il frontend non può scegliere o alterare
-     * il responsabile durante la creazione.
-     */
     @Override
     @Transactional
     public PraticaResponse creaPratica(
@@ -206,11 +193,6 @@ public class PraticaServiceImpl
                         pratica
                 );
 
-        /*
-         * La checklist viene generata
-         * automaticamente in base
-         * al servizio selezionato.
-         */
         documentoPraticaService
                 .generaChecklistDaServizio(
                         salvata
@@ -232,11 +214,6 @@ public class PraticaServiceImpl
 
         Utente responsabile = null;
 
-        /*
-         * Nell'aggiornamento manteniamo
-         * la possibilità di riassegnare
-         * la pratica.
-         */
         if (
                 request.responsabileId()
                         != null
@@ -380,10 +357,6 @@ public class PraticaServiceImpl
                 );
     }
 
-    /*
-     * Recupera direttamente il principal
-     * autenticato dal SecurityContext.
-     */
     private Utente trovaResponsabileAutenticato() {
         Authentication authentication =
                 SecurityContextHolder
@@ -410,10 +383,6 @@ public class PraticaServiceImpl
         );
     }
 
-    /*
-     * Utilizzato anche durante la riassegnazione
-     * manuale di una pratica.
-     */
     private Utente trovaResponsabile(
             Long responsabileId
     ) {

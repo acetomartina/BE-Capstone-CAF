@@ -83,12 +83,6 @@ public class TesseramentoServiceImpl
         );
     }
 
-    /**
-     * Una tessera copre un anno: finche' quella in corso non e' scaduta,
-     * emetterne un'altra creerebbe due periodi sovrapposti e una quota
-     * incassata due volte. Il rinnovo si fa quando la precedente e'
-     * arrivata a termine, oppure dopo averla annullata.
-     */
     private void verificaAssenzaTesseramentoAttivo(
             Long clienteId,
             LocalDate dataNuovoTesseramento

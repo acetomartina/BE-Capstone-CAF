@@ -25,5 +25,4 @@ public interface ServizioRepository
     Optional<Servizio>
     findBySlugAndAttivoTrue(String slug);
 
-
 }

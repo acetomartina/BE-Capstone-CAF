@@ -96,13 +96,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Diversi service segnalano una risorsa assente con la
-     * EntityNotFoundException di JPA invece che con la nostra
-     * ResourceNotFoundException. Senza questo handler finivano nel
-     * catch generico e il client riceveva un 500 "errore interno" al
-     * posto di un 404: un id inesistente non e' un guasto del server.
-     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleEntityNotFound(
             EntityNotFoundException ex,

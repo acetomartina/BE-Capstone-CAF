@@ -17,10 +17,6 @@ public class RicercaGlobaleResponse {
 
     private List<RisultatoClienteRicercaResponse> clienti;
 
-    /*
-     * Questi verranno tipizzati quando collegheremo
-     * anche pratiche e documenti.
-     */
     private List<Object> pratiche;
 
     private List<Object> documenti;

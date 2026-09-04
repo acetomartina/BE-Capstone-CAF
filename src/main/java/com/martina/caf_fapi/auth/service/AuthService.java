@@ -8,12 +8,5 @@ public interface AuthService {
 
     LoginResponse login(LoginRequest request);
 
-    /**
-     * Dati dell'utente collegato, ricavati dal token.
-     * <p>
-     * Serve al frontend per ricostruire la sessione dopo un ricaricamento:
-     * il ruolo arriva dal database a ogni avvio, quindi una disattivazione
-     * o un cambio di ruolo hanno effetto subito.
-     */
     UtenteResponse utenteCorrente(String email);
 }

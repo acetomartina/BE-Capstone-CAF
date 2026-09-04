@@ -209,11 +209,6 @@ public class AllegatoDocumentoServiceImpl
                                 allegatoId
                         );
 
-        /*
-         * Se quello che stiamo eliminando
-         * è l'ultimo allegato del documento,
-         * la checklist torna a MANCANTE.
-         */
         if (!esistonoAltriAllegati) {
             documento.setStato(
                     StatoDocumentoPratica.MANCANTE
@@ -268,16 +263,6 @@ public class AllegatoDocumentoServiceImpl
                 .map(this::toResponse)
                 .toList();
     }
-
-    /*
-     * ------------------------------------------------------------------
-     * Controlli di accesso
-     * ------------------------------------------------------------------
-     *
-     * Gli allegati contengono documenti fiscali e di identita': senza
-     * questi controlli qualunque utente autenticato potrebbe leggere
-     * quelli di chiunque altro semplicemente indovinando un id.
-     */
 
     private DocumentoRichiestoPratica trovaDocumentoAccessibile(
             Long documentoPraticaId,

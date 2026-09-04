@@ -30,7 +30,6 @@ public class Utente extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Dati anagrafici
     @Column(nullable = false, length = 80)
     private String nome;
 
@@ -51,7 +50,6 @@ public class Utente extends BaseEntity {
     @Column(name = "luogo_nascita", length = 100)
     private String luogoNascita;
 
-    // Contatti
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
@@ -61,7 +59,6 @@ public class Utente extends BaseEntity {
     @Column(name = "telefono_secondario", length = 20)
     private String telefonoSecondario;
 
-    // Indirizzo
     @Column(length = 150)
     private String indirizzo;
 
@@ -73,8 +70,6 @@ public class Utente extends BaseEntity {
 
     @Column(length = 5)
     private String cap;
-
-    // Domicilio
 
     @Column(
             name = "domicilio_diverso_dalla_residenza",
@@ -95,7 +90,6 @@ public class Utente extends BaseEntity {
     @Column(name = "domicilio_cap", length = 5)
     private String domicilioCap;
 
-    // Autenticazione e autorizzazione
     @Column(nullable = false)
     @ToString.Exclude
     private String password;
@@ -120,18 +114,15 @@ public class Utente extends BaseEntity {
     @Builder.Default
     private int tentativiAccessoFalliti = 0;
 
-    // Informazioni professionali
     @Column(length = 100)
     private String mansione;
 
     @Column(name = "numero_matricola", unique = true, length = 50)
     private String numeroMatricola;
 
-    // Immagine profilo
     @Column(name = "url_immagine_profilo", length = 500)
     private String urlImmagineProfilo;
 
-    // Tracciamento accessi e password
     @Column(name = "ultimo_accesso")
     private LocalDateTime ultimoAccesso;
 

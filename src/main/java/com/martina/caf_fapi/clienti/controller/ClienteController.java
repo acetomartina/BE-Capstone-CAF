@@ -23,7 +23,6 @@ public class ClienteController {
 
     private final ClienteService clienteService;
 
-
     @GetMapping
     public ResponseEntity<Page<ClienteResponse>> trovaTutti(
             @RequestParam(required = false)
@@ -137,5 +136,4 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
-    
 }

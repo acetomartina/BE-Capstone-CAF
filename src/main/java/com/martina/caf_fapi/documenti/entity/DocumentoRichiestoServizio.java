@@ -53,12 +53,10 @@ public class DocumentoRichiestoServizio {
     private TipoObbligatorietaDocumento tipoObbligatorieta =
             TipoObbligatorietaDocumento.OBBLIGATORIO;
 
-
     @Column(
             name = "ordine_visualizzazione",
             nullable = false
     )
     private Integer ordineVisualizzazione;
-
 
 }

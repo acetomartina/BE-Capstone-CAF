@@ -6,10 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Risposta di sola conferma. Il messaggio non deve mai rivelare se un
- * account esiste: il frontend mostra comunque un testo fisso proprio.
- */
 @Getter
 @Setter
 @NoArgsConstructor

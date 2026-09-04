@@ -91,7 +91,6 @@ class PasswordResetServiceImplTest {
         return RecuperoPasswordRequest.builder().email(email).build();
     }
 
-    /** Ricalcola l'impronta come fa il servizio, per confrontarla. */
     private String sha256(String valore) {
         try {
             return HexFormat.of().formatHex(

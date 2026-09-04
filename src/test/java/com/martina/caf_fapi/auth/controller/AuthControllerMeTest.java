@@ -10,11 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * {@code /api/auth/me} sta sotto {@code /api/auth/**}, che e' pubblico:
- * senza la regola dedicata in SecurityConfig risponderebbe a chiunque.
- * Questi test esistono per accorgersene se quella regola sparisse.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerMeTest {
@@ -40,9 +35,6 @@ class AuthControllerMeTest {
     @Test
     @DisplayName("il login pubblico continua a non richiedere token")
     void loginRestaPubblico() throws Exception {
-        /* Non verifichiamo quale sia la risposta a una GET su un endpoint
-           POST, ma solo che la sicurezza non l'abbia bloccata: la regola
-           aggiunta per /me non deve aver chiuso il resto di /api/auth. */
         mockMvc.perform(get("/api/auth/login"))
                 .andExpect(risultato -> {
                     int stato = risultato.getResponse().getStatus();

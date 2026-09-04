@@ -103,11 +103,6 @@ public class PraticaClienteController {
             Long praticaId,
             UtenteDetails utenteDetails
     ) {
-        /*
-         * Il metodo cerca contemporaneamente la pratica
-         * e il cliente autenticato. Se non coincidono,
-         * restituisce una generica "Pratica non trovata".
-         */
         praticaService.trovaPerIdDelCliente(
                 praticaId,
                 utenteDetails.getId()

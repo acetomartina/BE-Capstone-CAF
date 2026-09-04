@@ -38,11 +38,6 @@ public class Servizio {
     )
     private MacroArea macroArea;
 
-    /*
-     * Per ora manteniamo solo l'id del partner.
-     * Il partner non serve al flusso di creazione pratica
-     * e potrà essere modellato come entity dedicata più avanti.
-     */
     @Column(name = "partner_id")
     private Long partnerId;
 

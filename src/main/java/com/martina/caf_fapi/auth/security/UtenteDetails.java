@@ -8,10 +8,6 @@ import org.springframework.security.core.userdetails.User;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * {@link User} arricchito con l'identificativo dell'utente,
- * il suo ruolo e il momento dell'ultimo cambio password.
- */
 public class UtenteDetails extends User {
 
     private final Long id;
@@ -44,10 +40,6 @@ public class UtenteDetails extends User {
         return ruolo;
     }
 
-    /**
-     * Vero per chi lavora in sede. Gli operatori vedono le pratiche di
-     * tutti i clienti; un CLIENTE vede soltanto le proprie.
-     */
     public boolean isOperatore() {
         return ruolo == Ruolo.SUPER_ADMIN
                 || ruolo == Ruolo.ADMIN

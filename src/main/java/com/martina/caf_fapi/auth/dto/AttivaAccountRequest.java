@@ -21,13 +21,6 @@ public class AttivaAccountRequest {
     @ToString.Exclude
     private String token;
 
-    /*
-     * L'attivazione account rappresenta la prima impostazione
-     * della password da parte del cliente.
-     *
-     * Manteniamo quindi gli stessi requisiti utilizzati
-     * in CreaUtenteRequest e ResetPasswordRequest.
-     */
     @NotBlank(message = "La password è obbligatoria.")
     @Size(
             min = 8,
